@@ -1,2 +1,2 @@
-include ':contact-trace'
-rootProject.name='Covid Node Trace'
+include ':app'
+rootProject.name = "Covid Node Trace"
