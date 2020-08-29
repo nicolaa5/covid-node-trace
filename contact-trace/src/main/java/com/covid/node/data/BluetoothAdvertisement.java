@@ -1,15 +1,12 @@
-package com.trace.api.data;
+package com.covid.node.data;
 
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothGatt;
 import android.bluetooth.le.AdvertiseCallback;
 import android.bluetooth.le.AdvertiseData;
 import android.bluetooth.le.AdvertiseSettings;
 import android.bluetooth.le.BluetoothLeAdvertiser;
 import android.os.Build;
-
-import java.util.UUID;
 
 public class BluetoothAdvertisement {
 

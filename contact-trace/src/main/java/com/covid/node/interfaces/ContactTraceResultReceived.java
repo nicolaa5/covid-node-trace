@@ -1,8 +1,8 @@
-package com.trace.api.interfaces;
+package com.covid.node.interfaces;
 
 import android.bluetooth.BluetoothDevice;
 
-import com.trace.api.data.ContactTraceResult;
+import com.covid.node.data.ContactTraceResult;
 
 /**
  * Interface for retrieving contact trace results from processed Bluetooth scan records

@@ -1,2 +1,2 @@
 include ':contact-trace'
-rootProject.name='TraceTogether'
+rootProject.name='Covid Node Trace'

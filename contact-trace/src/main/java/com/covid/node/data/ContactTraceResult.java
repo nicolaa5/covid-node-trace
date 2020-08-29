@@ -1,4 +1,4 @@
-package com.trace.api.data;
+package com.covid.node.data;
 
 import android.bluetooth.BluetoothDevice;
 import android.os.Parcel;

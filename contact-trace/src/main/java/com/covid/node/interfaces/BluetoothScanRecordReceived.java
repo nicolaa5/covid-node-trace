@@ -1,9 +1,8 @@
-package com.trace.api.interfaces;
+package com.covid.node.interfaces;
 
 import android.bluetooth.BluetoothDevice;
 
 import no.nordicsemi.android.support.v18.scanner.ScanRecord;
-import no.nordicsemi.android.support.v18.scanner.ScanResult;
 
 public interface BluetoothScanRecordReceived {
     void onBluetoothScanRecordReceived(BluetoothDevice device, ScanRecord scanRecord);

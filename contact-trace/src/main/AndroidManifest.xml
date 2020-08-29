@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.trace.api">
+    package="com.covid.node">
 
     <application
         android:allowBackup="true"
@@ -8,6 +8,6 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <service android:enabled="true" android:name="com.trace.api.ContactTraceService" />
+        <service android:enabled="true" android:name="com.covid.node.ContactTraceService" />
     </application>
 </manifest>

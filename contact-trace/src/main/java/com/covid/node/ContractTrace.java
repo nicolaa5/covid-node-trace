@@ -1,4 +1,4 @@
-package com.trace.api;
+package com.covid.node;
 
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
@@ -11,12 +11,12 @@ import android.os.IBinder;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import com.trace.api.data.ContactTraceResult;
-import com.trace.api.interfaces.ContactTraceResultReceived;
+import com.covid.node.data.ContactTraceResult;
+import com.covid.node.interfaces.ContactTraceResultReceived;
 
-import static com.trace.api.ContactTraceService.BROADCAST_SCAN_RESULT;
-import static com.trace.api.ContactTraceService.EXTRA_DEVICE;
-import static com.trace.api.ContactTraceService.EXTRA_SCAN_RESULT;
+import static com.covid.node.ContactTraceService.BROADCAST_SCAN_RESULT;
+import static com.covid.node.ContactTraceService.EXTRA_DEVICE;
+import static com.covid.node.ContactTraceService.EXTRA_SCAN_RESULT;
 
 
 public class ContractTrace implements ContactTraceResultReceived {

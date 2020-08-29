@@ -1,4 +1,4 @@
-package com.trace.api;
+package com.covid.node;
 
 import android.content.Context;
 

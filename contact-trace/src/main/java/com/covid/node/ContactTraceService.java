@@ -1,4 +1,4 @@
-package com.trace.api;
+package com.covid.node;
 
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
@@ -15,11 +15,10 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import com.trace.api.data.ContactTraceResult;
-import com.trace.api.interfaces.BluetoothScanRecordReceived;
+import com.covid.node.data.ContactTraceResult;
+import com.covid.node.interfaces.BluetoothScanRecordReceived;
 
 import no.nordicsemi.android.support.v18.scanner.ScanRecord;
-import no.nordicsemi.android.support.v18.scanner.ScanResult;
 
 public class ContactTraceService extends Service implements BluetoothScanRecordReceived {
     private final static String TAG = ContactTraceService.class.getSimpleName();
