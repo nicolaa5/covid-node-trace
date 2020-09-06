@@ -1,4 +1,4 @@
-package com.samla.covidnodetrace
+package com.covid.nodetrace
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -19,6 +19,6 @@ class ExampleInstrumentedTest {
     fun useAppContext() {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("com.samla.covidnodetrace", appContext.packageName)
+        assertEquals("com.covid.nodetrace", appContext.packageName)
     }
 }

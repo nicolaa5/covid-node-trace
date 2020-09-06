@@ -1,4 +1,4 @@
-package com.samla.covidnodetrace
+package com.covid.nodetrace
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
