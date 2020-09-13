@@ -1,5 +1,6 @@
 package com.covid.nodetrace
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -32,6 +33,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
 
         auth = FirebaseAuth.getInstance()
         authenticateUser(auth)
+
+        startService(Intent(this, ContactService::class.java))
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
