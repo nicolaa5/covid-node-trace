@@ -6,10 +6,7 @@ import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
-import com.google.api.gax.paging.Page
 import com.google.auth.oauth2.GoogleCredentials
-import com.google.cloud.storage.Bucket
-import com.google.cloud.storage.Storage
 import com.google.cloud.storage.StorageOptions
 import com.google.common.collect.Lists
 import com.google.firebase.FirebaseApp
@@ -18,7 +15,9 @@ import kotlinx.coroutines.*
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
+import java.io.InputStream
 import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.resume
 
 
 class MainActivity : AppCompatActivity(), CoroutineScope {
@@ -36,10 +35,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         }
 
         this.launch(Dispatchers.IO) {
-            val file = File("/google-services.json")
-
-            val otherfile = File("C:/Users/\'Niek Bijman\'/AppData/Roaming/gcloud/application_default_credentials.json")
-            initializeBackend(file)
+            val jsonFile = resources.openRawResource(R.raw.credentials)
+            initializeBackend(jsonFile)
         }
     }
 
@@ -65,37 +62,22 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         coroutineContext[Job]!!.cancel()
     }
 
-    suspend fun initializeBackend (keyFile: File) : Boolean = suspendCancellableCoroutine { continuation ->
-        if (!keyFile.isFile)
-            continuation.isCancelled
+    suspend fun initializeBackend(credentialsStream: InputStream?) : Boolean = suspendCancellableCoroutine { continuation ->
 
-        val projectPath: String? = System.getenv("GCLOUD_PROJECT")
-        val credentialsPath: String? = System.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-        val awsPath: String? = System.getenv("AWS_DEFAULT_REGION")
+        if (credentialsStream == null)
+            continuation.resume(false)
+
+        // You can specify a credential file by providing a path to GoogleCredentials.
+        // Otherwise credentials are read from the GOOGLE_APPLICATION_CREDENTIALS environment variable.
+        val credentials: GoogleCredentials = GoogleCredentials.fromStream(credentialsStream)
+                .createScoped(Lists.newArrayList("https://www.googleapis.com/auth/cloud-platform"))
+
         val options: FirebaseOptions = FirebaseOptions.builder()
-            .setCredentials(GoogleCredentials.fromStream(FileInputStream(keyFile))) //getApplicationDefault()) //
+            .setCredentials(credentials)
             .setDatabaseUrl("https://covid-node-trace.firebaseio.com")
             .build()
 
         FirebaseApp.initializeApp(options)
-    }
-
-    @Throws(IOException::class)
-    fun authExplicit(jsonPath: String?) {
-
-        if (jsonPath.isNullOrEmpty())
-            return
-
-        // You can specify a credential file by providing a path to GoogleCredentials.
-        // Otherwise credentials are read from the GOOGLE_APPLICATION_CREDENTIALS environment variable.
-        val credentials: GoogleCredentials = GoogleCredentials.fromStream(FileInputStream(jsonPath))
-                .createScoped(Lists.newArrayList("https://www.googleapis.com/auth/cloud-platform"))
-        val storage: Storage =
-            StorageOptions.newBuilder().setCredentials(credentials).build().service
-        println("Buckets:")
-        val buckets: Page<Bucket> = storage.list()
-        for (bucket in buckets.iterateAll()) {
-            System.out.println(bucket.toString())
-        }
+        continuation.resume(true)
     }
 }
