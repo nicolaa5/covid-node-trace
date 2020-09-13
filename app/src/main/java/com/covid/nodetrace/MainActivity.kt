@@ -1,28 +1,24 @@
 package com.covid.nodetrace
 
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
-import com.google.auth.oauth2.GoogleCredentials
-import com.google.cloud.storage.StorageOptions
-import com.google.common.collect.Lists
-import com.google.firebase.FirebaseApp
-import com.google.firebase.FirebaseOptions
-import kotlinx.coroutines.*
-import java.io.File
-import java.io.FileInputStream
-import java.io.IOException
-import java.io.InputStream
+import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.resume
-
 
 class MainActivity : AppCompatActivity(), CoroutineScope {
+    private val TAG: String = MainActivity::class.java.getSimpleName()
 
     override val coroutineContext: CoroutineContext = Dispatchers.Main + SupervisorJob()
+    private lateinit var auth: FirebaseAuth
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,10 +30,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                     .setAction("Action", null).show()
         }
 
-        this.launch(Dispatchers.IO) {
-            val jsonFile = resources.openRawResource(R.raw.credentials)
-            initializeBackend(jsonFile)
-        }
+        auth = FirebaseAuth.getInstance()
+        authenticateUser(auth)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -62,22 +56,15 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         coroutineContext[Job]!!.cancel()
     }
 
-    suspend fun initializeBackend(credentialsStream: InputStream?) : Boolean = suspendCancellableCoroutine { continuation ->
-
-        if (credentialsStream == null)
-            continuation.resume(false)
-
-        // You can specify a credential file by providing a path to GoogleCredentials.
-        // Otherwise credentials are read from the GOOGLE_APPLICATION_CREDENTIALS environment variable.
-        val credentials: GoogleCredentials = GoogleCredentials.fromStream(credentialsStream)
-                .createScoped(Lists.newArrayList("https://www.googleapis.com/auth/cloud-platform"))
-
-        val options: FirebaseOptions = FirebaseOptions.builder()
-            .setCredentials(credentials)
-            .setDatabaseUrl("https://covid-node-trace.firebaseio.com")
-            .build()
-
-        FirebaseApp.initializeApp(options)
-        continuation.resume(true)
+    private fun authenticateUser(firebaseAuth : FirebaseAuth) {
+        firebaseAuth.signInAnonymously().addOnCompleteListener(this) { task ->
+            if (task.isSuccessful) {
+                Log.d(TAG, "signInAnonymously:success")
+                val user = auth.currentUser
+            } else {
+                Log.w(TAG, "signInAnonymously:failure", task.exception)
+            }
+        }
     }
+
 }
