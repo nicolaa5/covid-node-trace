@@ -76,4 +76,7 @@ dependencies {
     //Backend server libraries
     implementation 'com.google.firebase:firebase-admin:7.0.0'
     implementation 'com.google.cloud:google-cloud-storage:1.112.0'
+
+    //Nearby communications Library
+    implementation 'com.google.android.gms:play-services-nearby:17.0.0'
 }
