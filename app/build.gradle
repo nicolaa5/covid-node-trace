@@ -73,10 +73,10 @@ dependencies {
     implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.0.0'
     implementation 'no.nordicsemi.android.support.v18:scanner:1.4.2'
 
-    //Backend server libraries
-    implementation 'com.google.firebase:firebase-admin:7.0.0'
-    implementation 'com.google.cloud:google-cloud-storage:1.112.0'
 
     //Nearby communications Library
     implementation 'com.google.android.gms:play-services-nearby:17.0.0'
+
+    //Authentication libraries
+    implementation 'com.google.firebase:firebase-auth:19.4.0'
 }
