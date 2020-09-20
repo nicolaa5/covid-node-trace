@@ -9,4 +9,11 @@
     <string name="shared_preferences">shared_preferences</string>
     <string name="hello_first_fragment">Hello first fragment</string>
     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
+    <string name="welcome_screen">Welcome Screen</string>
+    <string name="welcome_explanation">
+        Welcome to the Covid-19 Node Tracer app.
+        With this application you can track whether you have been in contact with someone who had Covid-19.
+    </string>
+    <string name="welcome_screen_button">Start</string>
+
 </resources>
