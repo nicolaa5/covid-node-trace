@@ -7,9 +7,11 @@ import android.app.Service
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.messages.Message
+import com.google.android.gms.nearby.messages.MessageListener
 import java.util.*
 
 
@@ -23,12 +25,13 @@ public class ContactService () : Service() {
      */
     private lateinit var uniqueMessage: Message
 
+    /**
+     * A listener that is called by Google's Nearby Messages API when a message is received
+     */
+    private lateinit var messageListener: MessageListener
 
     override fun onCreate() {
         super.onCreate()
-        val prefs = getSharedPreferences(getString(R.string.shared_preferences), MODE_PRIVATE)
-        val uniqueID = UUID.randomUUID().toString()
-        uniqueMessage = Message(uniqueID.toByteArray())
     }
 
     override fun onBind(p0: Intent?): IBinder? {
@@ -46,7 +49,9 @@ public class ContactService () : Service() {
      * system to restart the service when enough resources are available again
      */
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Nearby.getMessagesClient(this).publish(uniqueMessage)
+
+        advertiseUniqueID()
+        scanForNearbyDevices()
 
         createNotificationChannel()
         val notificationIntent = Intent(this, MainActivity::class.java)
@@ -89,6 +94,37 @@ public class ContactService () : Service() {
     override fun onDestroy() {
         super.onDestroy()
         Nearby.getMessagesClient(this).unpublish(uniqueMessage)
+        Nearby.getMessagesClient(this).unsubscribe(messageListener)
+    }
+
+    /**
+     * Advertises (BLE term for sending/transmitting data) a unique ID to devices in the area
+     */
+    fun advertiseUniqueID () {
+        val prefs = getSharedPreferences(getString(R.string.shared_preferences), MODE_PRIVATE)
+        val uniqueID = UUID.randomUUID().toString()
+        uniqueMessage = Message(uniqueID.toByteArray())
+
+        Nearby.getMessagesClient(this).publish(uniqueMessage)
+    }
+
+    /**
+     * Scans for devices in the area that advertise UUIDs
+     */
+    fun scanForNearbyDevices () {
+        messageListener = object : MessageListener() {
+            override fun onFound(message: Message) {
+                val metUserUID = String(message.content)
+                Log.d(TAG, "Found user: $metUserUID")
+            }
+
+            override fun onLost(message: Message) {
+                val lostUserUID = String(message.content)
+                Log.d(TAG, "Lost sight of user: $lostUserUID")
+            }
+        }
+
+        Nearby.getMessagesClient(this).subscribe(messageListener)
     }
 
 
