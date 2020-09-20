@@ -1,10 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.covid.nodetrace.MainActivity">
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
     <item
-        android:id="@+id/action_settings"
-        android:orderInCategory="100"
-        android:title="@string/action_settings"
-        app:showAsAction="never" />
+        android:id="@+id/welcome_menu"
+        android:title="@string/welcome_menu"
+        app:showAsAction="never"/>
+    <item
+        android:id="@+id/health_status_menu"
+        android:title="@string/health_status_menu"
+        app:showAsAction="never"/>
+    <item
+        android:id="@+id/contact_menu"
+        android:title="@string/contact_menu"
+        app:showAsAction="never"/>
+    <item
+        android:id="@+id/settings_menu"
+        android:title="@string/settings_menu"
+        app:showAsAction="never"/>
+
 </menu>

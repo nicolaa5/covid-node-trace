@@ -3,26 +3,36 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/FirstFragment">
+    app:startDestination="@id/WelcomeFragment">
 
     <fragment
-        android:id="@+id/FirstFragment"
-        android:name="com.covid.nodetrace.FirstFragment"
-        android:label="@string/first_fragment_label"
-        tools:layout="@layout/fragment_first">
+        android:id="@+id/WelcomeFragment"
+        android:name="com.covid.nodetrace.ui.WelcomeFragment"
+        android:label="@string/welcome_fragment_label"
+        tools:layout="@layout/welcome_screen">
 
         <action
-            android:id="@+id/action_FirstFragment_to_SecondFragment"
-            app:destination="@id/SecondFragment" />
+            android:id="@+id/action_WelcomeFragment_to_HealthStatusFragment"
+            app:destination="@id/HealthStatusFragment" />
     </fragment>
     <fragment
-        android:id="@+id/SecondFragment"
-        android:name="com.covid.nodetrace.SecondFragment"
-        android:label="@string/second_fragment_label"
-        tools:layout="@layout/fragment_second">
+        android:id="@+id/HealthStatusFragment"
+        android:name="com.covid.nodetrace.ui.HealthStatusFragment"
+        android:label="@string/health_status_fragment_label"
+        tools:layout="@layout/health_status_screen">
 
         <action
-            android:id="@+id/action_SecondFragment_to_FirstFragment"
-            app:destination="@id/FirstFragment" />
+            android:id="@+id/action_HealthStatusFragment_to_ContactFragment"
+            app:destination="@id/ContactFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/ContactFragment"
+        android:name="com.covid.nodetrace.ui.ContactFragment"
+        android:label="@string/health_status_fragment_label"
+        tools:layout="@layout/health_status_screen">
+
+        <action
+            android:id="@+id/action_ContactFragment_to_HealthStatusFragment"
+            app:destination="@id/HealthStatusFragment" />
     </fragment>
 </navigation>
