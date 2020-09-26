@@ -1,12 +1,52 @@
 <resources>
     <string name="app_name">Covid Node Trace</string>
+    <string name="screen_state">Screen State</string>
     <string name="action_settings">Settings</string>
+
     <!-- Strings used for fragments for navigation -->
-    <string name="first_fragment_label">First Fragment</string>
-    <string name="second_fragment_label">Second Fragment</string>
+    <string name="welcome_fragment_label">Welcome Fragment</string>
+    <string name="health_status_fragment_label">Health Status Fragment</string>
+    <string name="contact_fragment_label">Contact Fragment</string>
+    <string name="settings_fragment_label">Settings Fragment</string>
+
     <string name="next">Next</string>
     <string name="previous">Previous</string>
     <string name="shared_preferences">shared_preferences</string>
     <string name="hello_first_fragment">Hello first fragment</string>
     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
+    <string name="welcome_screen">Welcome Screen</string>
+    <string name="welcome_explanation">
+        Welcome to the Covid-19 Node Tracer app.
+        With this application you can track whether you have been in contact with someone who had Covid-19.
+    </string>
+    <string name="welcome_screen_button">Start</string>
+    <string name="welcome_menu">Introduction</string>
+    <string name="health_status_menu">Health Status</string>
+    <string name="contact_menu">Contacts</string>
+    <string name="settings_menu">Settings</string>
+    <string name="update_health_status_button">Submit</string>
+    <string name="health_status">""</string>
+
+    <string name="contact_date">"Date: " + %1$s</string>
+    <string name="contact_time">"Time: " + %1$s</string>
+    <string name="contact_duration">"Duration: " + %1$s</string>
+    <string name="contact_distance">"Distance: " + %1$s</string>
+
+    <string name="row_contact_date">"Date"</string>
+    <string name="row_contact_duration">"Duration"</string>
+    <string name="row_contact_distance">"Distance"</string>
+    <string name="row_contact_location">"Location"</string>
+
+    <string name="settings_privacy_title">Privacy</string>
+    <string name="privacy_explanation">
+        This application does not share your private data with any users or 3rd parties.
+        The data is kept encrypted on your device only
+    </string>
+    <string name="type_title">Type</string>
+    <string name="node_title">Node</string>
+    <string name="user_title">User</string>
+    <string name="type_explanation">
+        Nodes will advertise a bluetooth ID, while a User scans for bluetooth IDs
+    </string>
+
 </resources>
