@@ -37,5 +37,16 @@
     <string name="row_contact_distance">"Distance"</string>
     <string name="row_contact_location">"Location"</string>
 
+    <string name="settings_privacy_title">Privacy</string>
+    <string name="privacy_explanation">
+        This application does not share your private data with any users or 3rd parties.
+        The data is kept encrypted on your device only
+    </string>
+    <string name="type_title">Type</string>
+    <string name="node_title">Node</string>
+    <string name="user_title">User</string>
+    <string name="type_explanation">
+        Nodes will advertise a bluetooth ID, while a User scans for bluetooth IDs
+    </string>
 
 </resources>
