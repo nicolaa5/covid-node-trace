@@ -27,4 +27,15 @@
     <string name="update_health_status_button">Submit</string>
     <string name="health_status">""</string>
 
+    <string name="contact_date">"Date: " + %1$s</string>
+    <string name="contact_time">"Time: " + %1$s</string>
+    <string name="contact_duration">"Duration: " + %1$s</string>
+    <string name="contact_distance">"Distance: " + %1$s</string>
+
+    <string name="row_contact_date">"Date"</string>
+    <string name="row_contact_duration">"Duration"</string>
+    <string name="row_contact_distance">"Distance"</string>
+    <string name="row_contact_location">"Location"</string>
+
+
 </resources>
