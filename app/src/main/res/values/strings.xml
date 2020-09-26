@@ -24,5 +24,7 @@
     <string name="health_status_menu">Health Status</string>
     <string name="contact_menu">Contacts</string>
     <string name="settings_menu">Settings</string>
+    <string name="update_health_status_button">Submit</string>
+    <string name="health_status">""</string>
 
 </resources>
