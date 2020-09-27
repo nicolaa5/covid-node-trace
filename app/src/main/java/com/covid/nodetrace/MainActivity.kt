@@ -32,6 +32,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
     override val coroutineContext: CoroutineContext = Dispatchers.Main + SupervisorJob()
     private lateinit var auth: FirebaseAuth
 
+    private lateinit var contactManager : ContactManager
     private var contactService : ContactService? = null
     private var mService: ContactService.LocalBinder? = null
     private var mServiceBonded : Boolean = false
@@ -68,11 +69,13 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
             onServiceUnbound()
         }
     }
-
-
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        contactManager = ContactManager(lifecycle)
+        contactManager.createDatabase(this)
 
         auth = FirebaseAuth.getInstance()
         authenticateUser(auth)

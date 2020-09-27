@@ -7,6 +7,7 @@ import androidx.room.PrimaryKey
 
 @Entity
 open class Contact (
+    @PrimaryKey open val ID : String,
     @PrimaryKey open val date : String,
     @PrimaryKey open val duration : Int,
     @PrimaryKey open val distance : Float,
