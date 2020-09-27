@@ -1,10 +1,8 @@
 package com.covid.nodetrace
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
-import android.app.Service
+import android.app.*
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Binder
@@ -18,7 +16,7 @@ import com.google.android.gms.nearby.messages.MessageListener
 import java.util.*
 
 
-public class ContactService(private val serviceCallbacks: ServiceCallbacks) : Service() {
+public class ContactService() : Service() {
     private val TAG = "ContactService"
     val CHANNEL_ID = "ForegroundServiceChannel"
 
@@ -46,14 +44,20 @@ public class ContactService(private val serviceCallbacks: ServiceCallbacks) : Se
      */
     private lateinit var messageListener: MessageListener
 
-    override fun onCreate() {
-        super.onCreate()
-    }
-
     inner class LocalBinder : Binder() {
 
         fun setCommunicationType(type: CommunicationType) {
             communicationType = type
+        }
+
+        /**
+         * The app must call this method within 5 secs from creating this service, else it will crash
+         * See foreground service documentation for more info
+         *
+         * @param activity: The activity is needed to display a notification for the user
+         */
+        fun startForegroundService(activity: Activity, communicationType: CommunicationType) {
+            createForegroundService(activity, communicationType)
         }
 
         fun stopForegroundService() {
@@ -75,55 +79,49 @@ public class ContactService(private val serviceCallbacks: ServiceCallbacks) : Se
         return getBinder()
     }
 
+    fun createForegroundService(activity: Activity, communicationType: CommunicationType) {
 
-    //================================================================================
-    // Lifecycle methods
-    //================================================================================
-    fun start(mServiceIntent : Intent) {
+        createNotificationChannel()
+        val notificationIntent = Intent(this, MainActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(activity, 0, notificationIntent, 0)
+        var notification : Notification? = null
 
-        if (Build.VERSION.SDK_INT >= 26) {
-            startForegroundService(mServiceIntent)
-            bindService(mServiceIntent, mServiceConnection, 0)
-        } else {
-            // Pre-O behavior.
-            startService(mServiceIntent)
-            bindService(mServiceIntent, mServiceConnection, 0)
+        when(communicationType) {
+            CommunicationType.SCAN -> {
+                scanForNearbyDevices()
+
+                notification = NotificationCompat.Builder(this, CHANNEL_ID)
+                    .setContentTitle("Scanning for IDs")
+                    .setSmallIcon(R.drawable.ic_launcher_foreground)
+                    .setContentIntent(pendingIntent)
+                    .build()
+            }
+            CommunicationType.ADVERTISE -> {
+                advertiseUniqueID()
+
+                notification = NotificationCompat.Builder(this, CHANNEL_ID)
+                    .setContentTitle("Advertising unique ID")
+                    .setSmallIcon(R.drawable.ic_launcher_foreground)
+                    .setContentIntent(pendingIntent)
+                    .build()
+            }
+            CommunicationType.SCAN_AND_ADVERTISE -> {
+                advertiseUniqueID()
+                scanForNearbyDevices()
+
+                notification = NotificationCompat.Builder(this, CHANNEL_ID)
+                    .setContentTitle("Scanning for IDs and Advertising unique ID")
+                    .setSmallIcon(R.drawable.ic_launcher_foreground)
+                    .setContentIntent(pendingIntent)
+                    .build()
+            }
         }
-    }
-    //================================================================================
-    // BLE Service logic
-    //================================================================================
-    private val mServiceConnection: ServiceConnection = object : ServiceConnection {
-        override fun onServiceConnected(name: ComponentName, service: IBinder) {
-            mService = service as LocalBinder
-            onServiceBound(mService)
-        }
-
-        override fun onServiceDisconnected(name: ComponentName) {
-            // Note: this method is called only when the service is killed by the system,
-            // not when it stops itself or is stopped by the activity.
-            // It will be called only when there is critically low memory, in practice never
-            // when the activity is in foreground.
-            mService = null
-            onServiceUnbound()
-        }
-    }
-
-    /**
-     * Called when activity binds to the service. The parameter is the object returned in [Service.onBind] method in your service.
-     */
-    protected fun onServiceBound(binder: LocalBinder?) {
-        if (binder == null)
+        if (notification == null) {
+            Log.e(TAG, "Communication type not set")
             return
+        }
 
-        serviceCallbacks.onServiceBound(binder)
-    }
-
-    /**
-     * Called when activity unbinds from the service.
-     */
-    protected fun onServiceUnbound() {
-        serviceCallbacks.onServiceUnbound()
+        startForeground(1, notification)
     }
 
 
@@ -138,23 +136,6 @@ public class ContactService(private val serviceCallbacks: ServiceCallbacks) : Se
      * system to restart the service when enough resources are available again
      */
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-
-        advertiseUniqueID()
-        scanForNearbyDevices()
-
-        createNotificationChannel()
-        val notificationIntent = Intent(this, MainActivity::class.java)
-        val pendingIntent = PendingIntent.getActivity(
-            this,
-            0, notificationIntent, 0
-        )
-        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Advertising unique ID")
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentIntent(pendingIntent)
-            .build()
-        startForeground(1, notification)
-
         return START_STICKY
     }
 
@@ -182,8 +163,8 @@ public class ContactService(private val serviceCallbacks: ServiceCallbacks) : Se
      */
     override fun onDestroy() {
         super.onDestroy()
-        Nearby.getMessagesClient(this).unpublish(uniqueMessage)
-        Nearby.getMessagesClient(this).unsubscribe(messageListener)
+        Nearby.getMessagesClient(this)?.unpublish(uniqueMessage)
+        Nearby.getMessagesClient(this)?.unsubscribe(messageListener)
     }
 
     /**

@@ -1,8 +1,13 @@
 package com.covid.nodetrace
 
+import android.app.Service
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
+import android.os.Build
 import android.os.Bundle
+import android.os.IBinder
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -21,7 +26,7 @@ import kotlin.coroutines.CoroutineContext
  * The app's main activity keeps track of the different screens in the forms of multiple [Fragments]
  * It also initiates the background service that is actively scanning for / advertising to nearby devices.
  */
-class MainActivity : AppCompatActivity(), CoroutineScope, ServiceCallbacks {
+class MainActivity : AppCompatActivity(), CoroutineScope {
     private val TAG: String = MainActivity::class.java.getSimpleName()
 
     override val coroutineContext: CoroutineContext = Dispatchers.Main + SupervisorJob()
@@ -30,12 +35,38 @@ class MainActivity : AppCompatActivity(), CoroutineScope, ServiceCallbacks {
     private var contactService : ContactService? = null
     private var mService: ContactService.LocalBinder? = null
     private var mServiceBonded : Boolean = false
+    private lateinit var communicationType : ContactService.CommunicationType
 
     enum class Screens {
         WELCOME,
         HEALTH_STATUS,
         CONTACT,
         SETTINGS
+    }
+
+    //================================================================================
+    // Service logic
+    //================================================================================
+    private val mServiceConnection: ServiceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName, service: IBinder) {
+            mService = service as ContactService.LocalBinder
+
+            if (mService == null) {
+                Log.e(TAG, "Service is null")
+                return
+            }
+
+            onServiceBound(mService)
+        }
+
+        override fun onServiceDisconnected(name: ComponentName) {
+            // Note: this method is called only when the service is killed by the system,
+            // not when it stops itself or is stopped by the activity.
+            // It will be called only when there is critically low memory, in practice never
+            // when the activity is in foreground.
+            mService = null
+            onServiceUnbound()
+        }
     }
 
 
@@ -46,16 +77,13 @@ class MainActivity : AppCompatActivity(), CoroutineScope, ServiceCallbacks {
         auth = FirebaseAuth.getInstance()
         authenticateUser(auth)
 
-        contactService = ContactService(this)
-
         val sharedPref = getPreferences(Context.MODE_PRIVATE)
-        val communicationTypeFromStorage : Int = sharedPref.getInt(getString(R.string.communication_type_state), 0)
+        communicationType = ContactService.CommunicationType.values()[sharedPref.getInt(getString(R.string.communication_type_state), 0)]
 
-        val createServiceIntent = Intent(this, ContactService::class.java)
-        createServiceIntent.putExtra("communicationType", communicationTypeFromStorage);
-
-        contactService?.start(createServiceIntent)
-//        startService(createServiceIntent)
+        //Starts the Contact Trace Service
+        Intent(this, ContactService::class.java).also { intent ->
+            bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE)
+        }
     }
 
     override fun onStart() {
@@ -105,12 +133,20 @@ class MainActivity : AppCompatActivity(), CoroutineScope, ServiceCallbacks {
     }
 
 
-    override fun onServiceBound(binder: ContactService.LocalBinder) {
+    /**
+     * Called when activity binds to the service. The parameter is the object returned in [Service.onBind] method in your service.
+     */
+    fun onServiceBound(binder: ContactService.LocalBinder?) {
         mService = binder
+        mService?.startForegroundService(this, communicationType)
         mServiceBonded = true
     }
 
-    override fun onServiceUnbound() {
+
+    /**
+     * Called when activity unbinds from the service.
+     */
+    fun onServiceUnbound() {
         mServiceBonded = false
         mService?.stopForegroundService()
         mService = null
