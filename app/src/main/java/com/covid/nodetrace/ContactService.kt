@@ -37,12 +37,12 @@ public class ContactService() : Service() {
      * A unique 128-bit UUID is generated and send and used as the main
      * identifier when communicating messages
      */
-    private lateinit var uniqueMessage: Message
+    private var uniqueMessage: Message? = null
 
     /**
      * A listener that is called by Google's Nearby Messages API when a message is received
      */
-    private lateinit var messageListener: MessageListener
+    private var messageListener: MessageListener? = null
 
     inner class LocalBinder : Binder() {
 
@@ -163,8 +163,12 @@ public class ContactService() : Service() {
      */
     override fun onDestroy() {
         super.onDestroy()
-        Nearby.getMessagesClient(this)?.unpublish(uniqueMessage)
-        Nearby.getMessagesClient(this)?.unsubscribe(messageListener)
+
+        if (uniqueMessage != null)
+            Nearby.getMessagesClient(this)?.unpublish(uniqueMessage!!)
+
+        if (messageListener != null)
+            Nearby.getMessagesClient(this)?.unsubscribe(messageListener!!)
     }
 
     /**
@@ -175,7 +179,7 @@ public class ContactService() : Service() {
         val uniqueID = UUID.randomUUID().toString()
         uniqueMessage = Message(uniqueID.toByteArray())
 
-        Nearby.getMessagesClient(this).publish(uniqueMessage)
+        Nearby.getMessagesClient(this).publish(uniqueMessage!!)
     }
 
     /**
@@ -194,7 +198,7 @@ public class ContactService() : Service() {
             }
         }
 
-        Nearby.getMessagesClient(this).subscribe(messageListener)
+        Nearby.getMessagesClient(this).subscribe(messageListener!!)
     }
 
 }
