@@ -2,6 +2,7 @@ package com.covid.nodetrace.permissions
 
 import android.Manifest
 import android.app.Activity
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -20,9 +21,9 @@ object Permissions  {
 
     private val PERMISSION_REQUEST_CODE =  0x78
 
-    fun hasPermissions(activity: Activity, permissions: Array<String>): Boolean {
+    fun hasPermissions(context: Context, permissions: Array<String>): Boolean {
         for (permission : String in permissions) {
-            val result: Int = ContextCompat.checkSelfPermission(activity, permission)
+            val result: Int = ContextCompat.checkSelfPermission(context, permission)
             if (result != PackageManager.PERMISSION_GRANTED)
                 return false
         }
