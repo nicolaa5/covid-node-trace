@@ -1,8 +1,13 @@
 package com.covid.nodetrace
 
+import android.app.Service
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
+import android.os.Build
 import android.os.Bundle
+import android.os.IBinder
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -27,12 +32,41 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
     override val coroutineContext: CoroutineContext = Dispatchers.Main + SupervisorJob()
     private lateinit var auth: FirebaseAuth
 
+    private var contactService : ContactService? = null
+    private var mService: ContactService.LocalBinder? = null
+    private var mServiceBonded : Boolean = false
+    private lateinit var communicationType : ContactService.CommunicationType
 
     enum class Screens {
         WELCOME,
         HEALTH_STATUS,
         CONTACT,
         SETTINGS
+    }
+
+    //================================================================================
+    // Service logic
+    //================================================================================
+    private val mServiceConnection: ServiceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName, service: IBinder) {
+            mService = service as ContactService.LocalBinder
+
+            if (mService == null) {
+                Log.e(TAG, "Service is null")
+                return
+            }
+
+            onServiceBound(mService)
+        }
+
+        override fun onServiceDisconnected(name: ComponentName) {
+            // Note: this method is called only when the service is killed by the system,
+            // not when it stops itself or is stopped by the activity.
+            // It will be called only when there is critically low memory, in practice never
+            // when the activity is in foreground.
+            mService = null
+            onServiceUnbound()
+        }
     }
 
 
@@ -43,12 +77,17 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         auth = FirebaseAuth.getInstance()
         authenticateUser(auth)
 
-        startService(Intent(this, ContactService::class.java))
+        val sharedPref = getPreferences(Context.MODE_PRIVATE)
+        communicationType = ContactService.CommunicationType.values()[sharedPref.getInt(getString(R.string.communication_type_state), 0)]
+
+        //Starts the Contact Trace Service
+        Intent(this, ContactService::class.java).also { intent ->
+            bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE)
+        }
     }
 
     override fun onStart() {
         super.onStart()
-
 
         if (!Permissions.hasPermissions(this, requiredPermissions)) {
             Permissions.requestPermission(this, requiredPermissions) {
@@ -93,7 +132,27 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         coroutineContext[Job]!!.cancel()
     }
 
-    private fun authenticateUser(firebaseAuth : FirebaseAuth) {
+
+    /**
+     * Called when activity binds to the service. The parameter is the object returned in [Service.onBind] method in your service.
+     */
+    fun onServiceBound(binder: ContactService.LocalBinder?) {
+        mService = binder
+        mService?.startForegroundService(this, communicationType)
+        mServiceBonded = true
+    }
+
+
+    /**
+     * Called when activity unbinds from the service.
+     */
+    fun onServiceUnbound() {
+        mServiceBonded = false
+        mService?.stopForegroundService()
+        mService = null
+    }
+
+    private fun authenticateUser(firebaseAuth: FirebaseAuth) {
         firebaseAuth.signInAnonymously().addOnCompleteListener(this) { task ->
             if (task.isSuccessful) {
                 Log.d(TAG, "signInAnonymously:success")
@@ -104,7 +163,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         }
     }
 
-    fun showScreen(screen :Screens) {
+    fun showScreen(screen: Screens) {
 
         with(getPreferences(Context.MODE_PRIVATE).edit()) {
             putInt(resources.getString(R.string.screen_state), screen.ordinal)

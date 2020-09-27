@@ -1,10 +1,11 @@
 package com.covid.nodetrace
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
-import android.app.Service
+import android.app.*
+import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
+import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
@@ -15,28 +16,114 @@ import com.google.android.gms.nearby.messages.MessageListener
 import java.util.*
 
 
-public class ContactService () : Service() {
+public class ContactService() : Service() {
     private val TAG = "ContactService"
     val CHANNEL_ID = "ForegroundServiceChannel"
+
+    var mService : ContactService.LocalBinder? = null
+
+    var mBound : Boolean = false
+    var mActivityIsChangingConfiguration : Boolean = false
+    var communicationType = CommunicationType.NONE
+
+    enum class CommunicationType {
+        SCAN,
+        ADVERTISE,
+        SCAN_AND_ADVERTISE,
+        NONE
+    }
 
     /**
      * A unique 128-bit UUID is generated and send and used as the main
      * identifier when communicating messages
      */
-    private lateinit var uniqueMessage: Message
+    private var uniqueMessage: Message? = null
 
     /**
      * A listener that is called by Google's Nearby Messages API when a message is received
      */
-    private lateinit var messageListener: MessageListener
+    private var messageListener: MessageListener? = null
 
-    override fun onCreate() {
-        super.onCreate()
+    inner class LocalBinder : Binder() {
+
+        fun setCommunicationType(type: CommunicationType) {
+            communicationType = type
+        }
+
+        /**
+         * The app must call this method within 5 secs from creating this service, else it will crash
+         * See foreground service documentation for more info
+         *
+         * @param activity: The activity is needed to display a notification for the user
+         */
+        fun startForegroundService(activity: Activity, communicationType: CommunicationType) {
+            createForegroundService(activity, communicationType)
+        }
+
+        fun stopForegroundService() {
+            stopForeground(true)
+        }
     }
 
-    override fun onBind(p0: Intent?): IBinder? {
-        return null
+    /**
+     * Returns the binder implementation. This must return class implementing the additional manager interface that may be used in the bound activity.
+     *
+     * @return the service binder
+     */
+    protected fun getBinder(): LocalBinder? {
+        return LocalBinder()
     }
+
+    override fun onBind(intent: Intent?): IBinder? {
+        mBound = true
+        return getBinder()
+    }
+
+    fun createForegroundService(activity: Activity, communicationType: CommunicationType) {
+
+        createNotificationChannel()
+        val notificationIntent = Intent(this, MainActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(activity, 0, notificationIntent, 0)
+        var notification : Notification? = null
+
+        when(communicationType) {
+            CommunicationType.SCAN -> {
+                scanForNearbyDevices()
+
+                notification = NotificationCompat.Builder(this, CHANNEL_ID)
+                    .setContentTitle("Scanning for IDs")
+                    .setSmallIcon(R.drawable.ic_launcher_foreground)
+                    .setContentIntent(pendingIntent)
+                    .build()
+            }
+            CommunicationType.ADVERTISE -> {
+                advertiseUniqueID()
+
+                notification = NotificationCompat.Builder(this, CHANNEL_ID)
+                    .setContentTitle("Advertising unique ID")
+                    .setSmallIcon(R.drawable.ic_launcher_foreground)
+                    .setContentIntent(pendingIntent)
+                    .build()
+            }
+            CommunicationType.SCAN_AND_ADVERTISE -> {
+                advertiseUniqueID()
+                scanForNearbyDevices()
+
+                notification = NotificationCompat.Builder(this, CHANNEL_ID)
+                    .setContentTitle("Scanning for IDs and Advertising unique ID")
+                    .setSmallIcon(R.drawable.ic_launcher_foreground)
+                    .setContentIntent(pendingIntent)
+                    .build()
+            }
+        }
+        if (notification == null) {
+            Log.e(TAG, "Communication type not set")
+            return
+        }
+
+        startForeground(1, notification)
+    }
+
 
     /**
      * The app creates a 'foreground' service. This is a process that can run in the background of the app
@@ -49,23 +136,6 @@ public class ContactService () : Service() {
      * system to restart the service when enough resources are available again
      */
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-
-        advertiseUniqueID()
-        scanForNearbyDevices()
-
-        createNotificationChannel()
-        val notificationIntent = Intent(this, MainActivity::class.java)
-        val pendingIntent = PendingIntent.getActivity(
-            this,
-            0, notificationIntent, 0
-        )
-        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Advertising unique ID")
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentIntent(pendingIntent)
-            .build()
-        startForeground(1, notification)
-
         return START_STICKY
     }
 
@@ -93,8 +163,12 @@ public class ContactService () : Service() {
      */
     override fun onDestroy() {
         super.onDestroy()
-        Nearby.getMessagesClient(this).unpublish(uniqueMessage)
-        Nearby.getMessagesClient(this).unsubscribe(messageListener)
+
+        if (uniqueMessage != null)
+            Nearby.getMessagesClient(this)?.unpublish(uniqueMessage!!)
+
+        if (messageListener != null)
+            Nearby.getMessagesClient(this)?.unsubscribe(messageListener!!)
     }
 
     /**
@@ -105,7 +179,7 @@ public class ContactService () : Service() {
         val uniqueID = UUID.randomUUID().toString()
         uniqueMessage = Message(uniqueID.toByteArray())
 
-        Nearby.getMessagesClient(this).publish(uniqueMessage)
+        Nearby.getMessagesClient(this).publish(uniqueMessage!!)
     }
 
     /**
@@ -124,8 +198,7 @@ public class ContactService () : Service() {
             }
         }
 
-        Nearby.getMessagesClient(this).subscribe(messageListener)
+        Nearby.getMessagesClient(this).subscribe(messageListener!!)
     }
-
 
 }

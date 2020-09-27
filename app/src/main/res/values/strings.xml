@@ -3,6 +3,8 @@
     <string name="screen_state">Screen State</string>
     <string name="action_settings">Settings</string>
 
+    <string name="communication_type_state">Communication State</string>
+
     <!-- Strings used for fragments for navigation -->
     <string name="welcome_fragment_label">Welcome Fragment</string>
     <string name="health_status_fragment_label">Health Status Fragment</string>
