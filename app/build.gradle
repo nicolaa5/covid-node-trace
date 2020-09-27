@@ -17,10 +17,13 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
-    }
 
-    buildTypes.each {
-        it.buildConfigField('String', 'MAPS_API_KEY', MAPS_API_KEY)
+        // Read the API key from ./secure.properties into R.string.maps_api_key
+        def secureProps = new Properties()
+        if (file("../secure.properties").exists()) {
+            file("../secure.properties")?.withInputStream { secureProps.load(it) }
+        }
+        resValue "string", "maps_api_key", (secureProps.getProperty("MAPS_API_KEY") ?: "")
     }
 
     buildTypes {
