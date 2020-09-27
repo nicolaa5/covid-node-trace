@@ -1,15 +1,13 @@
 package com.covid.nodetrace
 
 import android.app.*
-import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
-import android.content.ServiceConnection
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.messages.Message
 import com.google.android.gms.nearby.messages.MessageListener
@@ -31,6 +29,12 @@ public class ContactService() : Service() {
         ADVERTISE,
         SCAN_AND_ADVERTISE,
         NONE
+    }
+    companion object {
+        val BROADCAST_NODE_FOUND = "com.covid.nodetrace.ContactService.BROADCAST_NODE_FOUND"
+        val BROADCAST_NODE_LOST = "com.covid.nodetrace.ContactService.BROADCAST_NODE_LOST"
+        val NODE_FOUND = "com.covid.nodetrace.ContactService.NODE_FOUND"
+        val NODE_LOST = "com.covid.nodetrace.ContactService.NODE_LOST"
     }
 
     /**
@@ -188,13 +192,23 @@ public class ContactService() : Service() {
     fun scanForNearbyDevices () {
         messageListener = object : MessageListener() {
             override fun onFound(message: Message) {
-                val metUserUID = String(message.content)
-                Log.d(TAG, "Found user: $metUserUID")
+                val foundID = String(message.content)
+                Log.d(TAG, "Found ID: $foundID")
+
+                val broadcast: Intent = Intent(ContactService.NODE_FOUND)
+                    .putExtra("FOUND_ID", foundID)
+
+                LocalBroadcastManager.getInstance(applicationContext).sendBroadcast(broadcast)
             }
 
             override fun onLost(message: Message) {
-                val lostUserUID = String(message.content)
-                Log.d(TAG, "Lost sight of user: $lostUserUID")
+                val lostID = String(message.content)
+                Log.d(TAG, "Lost sight of ID: $lostID")
+
+                val broadcast: Intent = Intent(ContactService.NODE_LOST)
+                    .putExtra("LOST_ID", lostID)
+
+                LocalBroadcastManager.getInstance(applicationContext).sendBroadcast(broadcast)
             }
         }
 

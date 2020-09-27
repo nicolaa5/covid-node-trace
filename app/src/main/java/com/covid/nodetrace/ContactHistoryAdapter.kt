@@ -57,7 +57,7 @@ class ContactHistoryAdapter(context: Context) : BaseAdapter() {
         row.contactDate.text = contact.date
         row.contactDuration.text = contact.duration.toString()
         row.contactDistance.text = contact.distance.toString()
-        row.contactLocation.text = contact.location.toString()
+        row.contactLocation.text = contact.latitude.toString() + ", " + contact.longitude.toString()
         return view
     }
 }

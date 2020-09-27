@@ -8,9 +8,10 @@ import androidx.room.PrimaryKey
 @Entity
 open class Contact (
     @PrimaryKey open val ID : String,
-    @PrimaryKey open val date : String,
-    @PrimaryKey open val duration : Int,
-    @PrimaryKey open val distance : Float,
-    @PrimaryKey open val location : Array<Double>) {
+    open val date : String,
+    open val duration : Int,
+    open val distance : Float,
+    open val latitude : Double,
+    open val longitude : Double) {
 
 }

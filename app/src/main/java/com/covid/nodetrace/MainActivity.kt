@@ -69,12 +69,12 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
             onServiceUnbound()
         }
     }
-    
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        contactManager = ContactManager(lifecycle)
+        contactManager = ContactManager(this, lifecycle)
         contactManager.createDatabase(this)
 
         auth = FirebaseAuth.getInstance()
