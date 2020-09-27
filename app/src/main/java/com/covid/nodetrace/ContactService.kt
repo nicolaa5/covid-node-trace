@@ -9,6 +9,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.gms.nearby.Nearby
+import com.google.android.gms.nearby.messages.Distance
 import com.google.android.gms.nearby.messages.Message
 import com.google.android.gms.nearby.messages.MessageListener
 import java.util.*
@@ -33,8 +34,10 @@ public class ContactService() : Service() {
     companion object {
         val BROADCAST_NODE_FOUND = "com.covid.nodetrace.ContactService.BROADCAST_NODE_FOUND"
         val BROADCAST_NODE_LOST = "com.covid.nodetrace.ContactService.BROADCAST_NODE_LOST"
+        val BROADCAST_DISTANCE_UPDATED = "com.covid.nodetrace.ContactService.BROADCAST_DISTANCE_UPDATED"
         val NODE_FOUND = "com.covid.nodetrace.ContactService.NODE_FOUND"
         val NODE_LOST = "com.covid.nodetrace.ContactService.NODE_LOST"
+        val DISTANCE_UPDATED = "com.covid.nodetrace.ContactService.DISTANCE_UPDATED"
     }
 
     /**
@@ -209,6 +212,25 @@ public class ContactService() : Service() {
                     .putExtra("LOST_ID", lostID)
 
                 LocalBroadcastManager.getInstance(applicationContext).sendBroadcast(broadcast)
+            }
+
+            override fun onDistanceChanged(message: Message?, distance: Distance?) {
+                super.onDistanceChanged(message, distance)
+
+                val content : ByteArray? = message?.content
+
+                if (content == null)
+                    return
+
+                val ID = String(content)
+
+                val broadcast: Intent = Intent(ContactService.DISTANCE_UPDATED)
+                    .putExtra("ID", ID)
+                    .putExtra("Distance", distance?.meters)
+
+                LocalBroadcastManager.getInstance(applicationContext).sendBroadcast(broadcast)
+
+
             }
         }
 

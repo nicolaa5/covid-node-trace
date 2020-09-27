@@ -54,7 +54,7 @@ class ContactHistoryAdapter(context: Context) : BaseAdapter() {
         }
 
         val contact : Contact = mContacts.get(position)
-        row.contactDate.text = contact.date
+        row.contactDate.text = contact.date.toString()
         row.contactDuration.text = contact.duration.toString()
         row.contactDistance.text = contact.distance.toString()
         row.contactLocation.text = contact.latitude.toString() + ", " + contact.longitude.toString()

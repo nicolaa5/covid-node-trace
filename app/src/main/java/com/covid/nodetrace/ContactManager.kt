@@ -16,6 +16,7 @@ import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.room.Room
+import com.covid.nodetrace.ContactService.Companion.BROADCAST_DISTANCE_UPDATED
 import com.covid.nodetrace.ContactService.Companion.BROADCAST_NODE_FOUND
 import com.covid.nodetrace.ContactService.Companion.BROADCAST_NODE_LOST
 import com.covid.nodetrace.database.AppDatabase
@@ -29,7 +30,7 @@ class ContactManager(context: Context, lifecycle: Lifecycle) : LifecycleObserver
     override val coroutineContext: CoroutineContext = Dispatchers.Main + SupervisorJob()
     private lateinit var appDatabase : AppDatabase
     private var mContext : Context? = context
-    private var contactStart : Long? = null
+    private lateinit var contacts : HashSet<Contact>
 
 
     /**
@@ -41,11 +42,32 @@ class ContactManager(context: Context, lifecycle: Lifecycle) : LifecycleObserver
             val action = intent.action
             when (action) {
                 BROADCAST_NODE_FOUND -> {
-                    val foundID = intent.getStringExtra("FOUND_ID")
-                }
+                    val foundID : String? = intent.getStringExtra("FOUND_ID")
 
+                    if (foundID == null)
+                        return
+
+                    val contact = createNewContact(foundID)
+                    contacts?.add(contact)
+                }
+                BROADCAST_DISTANCE_UPDATED -> {
+                    val ID = intent.getStringExtra("ID")
+                    val distance : Double = intent.getDoubleExtra("DISTANCE", -1.0)
+
+                    if (distance == -1.0)
+                        return
+
+                    updateContactDistance(ID, distance)
+                }
                 BROADCAST_NODE_LOST -> {
                     val lostID = intent.getStringExtra("LOST_ID")
+                    val contact : Contact? = updateContactDuration(lostID, getCurrentUnixDate())
+
+                    //If contact can't be found we do not insert it into the database
+                    if (contact == null)
+                        return
+
+                    insertContact(contact)
                 }
             }
         }
@@ -53,10 +75,8 @@ class ContactManager(context: Context, lifecycle: Lifecycle) : LifecycleObserver
 
     init {
         lifecycle.addObserver(this)
-        LocalBroadcastManager.getInstance(context).registerReceiver(
-            mDataBroadcastReceiver,
-            makeBroadcastFilter()
-        )
+        LocalBroadcastManager.getInstance(context).registerReceiver(mDataBroadcastReceiver,  makeBroadcastFilter())
+        contacts = HashSet<Contact>()
 
     }
 
@@ -70,12 +90,37 @@ class ContactManager(context: Context, lifecycle: Lifecycle) : LifecycleObserver
         }
     }
 
-    fun insertContact(contact: Contact) {
+    fun createNewContact (ID : String) : Contact {
         val date = getCurrentUnixDate()
-        contactStart = date
+        val location : Location? = getCurrentLocation()
 
-        val location : Array<Double>? = getCurrentLocation()
+        if (location != null)
+            return Contact(ID, date, location.latitude, location.longitude)
+        else {
+            return Contact(ID, date)
+        }
+    }
 
+    fun updateContactDistance(ID : String, distance : Double) {
+        for (contact in contacts) {
+            if (contact.ID == ID) {
+                if (distance < contact.distance)
+                    contact.distance = distance
+            }
+        }
+    }
+
+    fun updateContactDuration(ID : String, contactEnd : Long) : Contact? {
+        for (contact in contacts) {
+            if (contact.ID == ID) {
+                contact.duration = contactEnd - contact.date
+                return contact
+            }
+        }
+        return null
+    }
+
+    fun insertContact(contact: Contact) {
         appDatabase.contactDao().insert(contact)
     }
 
@@ -93,6 +138,7 @@ class ContactManager(context: Context, lifecycle: Lifecycle) : LifecycleObserver
         val intentFilter = IntentFilter()
         intentFilter.addAction(ContactService.NODE_FOUND)
         intentFilter.addAction(ContactService.NODE_LOST)
+        intentFilter.addAction(ContactService.DISTANCE_UPDATED)
         return intentFilter
     }
 
@@ -100,7 +146,7 @@ class ContactManager(context: Context, lifecycle: Lifecycle) : LifecycleObserver
         return System.currentTimeMillis()
     }
 
-    fun getCurrentLocation() : Array<Double>? {
+    fun getCurrentLocation() : Location? {
         //If context is not available then stop execution
         if (mContext == null)
             return null
@@ -118,7 +164,7 @@ class ContactManager(context: Context, lifecycle: Lifecycle) : LifecycleObserver
             return null
         }
 
-        return arrayOf(lastKnownLocation.latitude, lastKnownLocation.latitude)
+        return lastKnownLocation
     }
 
     /**
