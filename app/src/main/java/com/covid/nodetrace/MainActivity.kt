@@ -8,6 +8,8 @@ import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
+import com.covid.nodetrace.permissions.Permissions
+import com.covid.nodetrace.permissions.Permissions.requiredPermissions
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -42,6 +44,17 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         authenticateUser(auth)
 
         startService(Intent(this, ContactService::class.java))
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+
+        if (!Permissions.hasPermissions(this, requiredPermissions)) {
+            Permissions.requestPermission(this, requiredPermissions) {
+
+            }
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
