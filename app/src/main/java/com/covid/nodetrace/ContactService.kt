@@ -4,7 +4,10 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.ComponentName
 import android.content.Intent
+import android.content.ServiceConnection
+import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
@@ -15,9 +18,22 @@ import com.google.android.gms.nearby.messages.MessageListener
 import java.util.*
 
 
-public class ContactService () : Service() {
+public class ContactService(private val serviceCallbacks: ServiceCallbacks) : Service() {
     private val TAG = "ContactService"
     val CHANNEL_ID = "ForegroundServiceChannel"
+
+    var mService : ContactService.LocalBinder? = null
+
+    var mBound : Boolean = false
+    var mActivityIsChangingConfiguration : Boolean = false
+    var communicationType = CommunicationType.NONE
+
+    enum class CommunicationType {
+        SCAN,
+        ADVERTISE,
+        SCAN_AND_ADVERTISE,
+        NONE
+    }
 
     /**
      * A unique 128-bit UUID is generated and send and used as the main
@@ -34,9 +50,82 @@ public class ContactService () : Service() {
         super.onCreate()
     }
 
-    override fun onBind(p0: Intent?): IBinder? {
-        return null
+    inner class LocalBinder : Binder() {
+
+        fun setCommunicationType(type: CommunicationType) {
+            communicationType = type
+        }
+
+        fun stopForegroundService() {
+            stopForeground(true)
+        }
     }
+
+    /**
+     * Returns the binder implementation. This must return class implementing the additional manager interface that may be used in the bound activity.
+     *
+     * @return the service binder
+     */
+    protected fun getBinder(): LocalBinder? {
+        return LocalBinder()
+    }
+
+    override fun onBind(intent: Intent?): IBinder? {
+        mBound = true
+        return getBinder()
+    }
+
+
+    //================================================================================
+    // Lifecycle methods
+    //================================================================================
+    fun start(mServiceIntent : Intent) {
+
+        if (Build.VERSION.SDK_INT >= 26) {
+            startForegroundService(mServiceIntent)
+            bindService(mServiceIntent, mServiceConnection, 0)
+        } else {
+            // Pre-O behavior.
+            startService(mServiceIntent)
+            bindService(mServiceIntent, mServiceConnection, 0)
+        }
+    }
+    //================================================================================
+    // BLE Service logic
+    //================================================================================
+    private val mServiceConnection: ServiceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName, service: IBinder) {
+            mService = service as LocalBinder
+            onServiceBound(mService)
+        }
+
+        override fun onServiceDisconnected(name: ComponentName) {
+            // Note: this method is called only when the service is killed by the system,
+            // not when it stops itself or is stopped by the activity.
+            // It will be called only when there is critically low memory, in practice never
+            // when the activity is in foreground.
+            mService = null
+            onServiceUnbound()
+        }
+    }
+
+    /**
+     * Called when activity binds to the service. The parameter is the object returned in [Service.onBind] method in your service.
+     */
+    protected fun onServiceBound(binder: LocalBinder?) {
+        if (binder == null)
+            return
+
+        serviceCallbacks.onServiceBound(binder)
+    }
+
+    /**
+     * Called when activity unbinds from the service.
+     */
+    protected fun onServiceUnbound() {
+        serviceCallbacks.onServiceUnbound()
+    }
+
 
     /**
      * The app creates a 'foreground' service. This is a process that can run in the background of the app
@@ -126,6 +215,5 @@ public class ContactService () : Service() {
 
         Nearby.getMessagesClient(this).subscribe(messageListener)
     }
-
 
 }

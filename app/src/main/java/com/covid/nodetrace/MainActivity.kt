@@ -21,12 +21,15 @@ import kotlin.coroutines.CoroutineContext
  * The app's main activity keeps track of the different screens in the forms of multiple [Fragments]
  * It also initiates the background service that is actively scanning for / advertising to nearby devices.
  */
-class MainActivity : AppCompatActivity(), CoroutineScope {
+class MainActivity : AppCompatActivity(), CoroutineScope, ServiceCallbacks {
     private val TAG: String = MainActivity::class.java.getSimpleName()
 
     override val coroutineContext: CoroutineContext = Dispatchers.Main + SupervisorJob()
     private lateinit var auth: FirebaseAuth
 
+    private var contactService : ContactService? = null
+    private var mService: ContactService.LocalBinder? = null
+    private var mServiceBonded : Boolean = false
 
     enum class Screens {
         WELCOME,
@@ -43,12 +46,20 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         auth = FirebaseAuth.getInstance()
         authenticateUser(auth)
 
-        startService(Intent(this, ContactService::class.java))
+        contactService = ContactService(this)
+
+        val sharedPref = getPreferences(Context.MODE_PRIVATE)
+        val communicationTypeFromStorage : Int = sharedPref.getInt(getString(R.string.communication_type_state), 0)
+
+        val createServiceIntent = Intent(this, ContactService::class.java)
+        createServiceIntent.putExtra("communicationType", communicationTypeFromStorage);
+
+        contactService?.start(createServiceIntent)
+//        startService(createServiceIntent)
     }
 
     override fun onStart() {
         super.onStart()
-
 
         if (!Permissions.hasPermissions(this, requiredPermissions)) {
             Permissions.requestPermission(this, requiredPermissions) {
@@ -93,7 +104,19 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         coroutineContext[Job]!!.cancel()
     }
 
-    private fun authenticateUser(firebaseAuth : FirebaseAuth) {
+
+    override fun onServiceBound(binder: ContactService.LocalBinder) {
+        mService = binder
+        mServiceBonded = true
+    }
+
+    override fun onServiceUnbound() {
+        mServiceBonded = false
+        mService?.stopForegroundService()
+        mService = null
+    }
+
+    private fun authenticateUser(firebaseAuth: FirebaseAuth) {
         firebaseAuth.signInAnonymously().addOnCompleteListener(this) { task ->
             if (task.isSuccessful) {
                 Log.d(TAG, "signInAnonymously:success")
@@ -104,7 +127,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         }
     }
 
-    fun showScreen(screen :Screens) {
+    fun showScreen(screen: Screens) {
 
         with(getPreferences(Context.MODE_PRIVATE).edit()) {
             putInt(resources.getString(R.string.screen_state), screen.ordinal)
