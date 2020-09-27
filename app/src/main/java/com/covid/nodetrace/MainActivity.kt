@@ -6,15 +6,8 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import androidx.annotation.IdRes
-import androidx.annotation.NonNull
-import androidx.annotation.Nullable
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.Fragment
-import com.covid.nodetrace.ui.ContactFragment
-import com.covid.nodetrace.ui.HealthStatusFragment
-import com.covid.nodetrace.ui.SettingsFragment
-import com.covid.nodetrace.ui.WelcomeFragment
+import androidx.navigation.findNavController
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -22,6 +15,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlin.coroutines.CoroutineContext
 
+/**
+ * The app's main activity keeps track of the different screens in the forms of multiple [Fragments]
+ * It also initiates the background service that is actively scanning for / advertising to nearby devices.
+ */
 class MainActivity : AppCompatActivity(), CoroutineScope {
     private val TAG: String = MainActivity::class.java.getSimpleName()
 
@@ -103,38 +100,17 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
 
         when (screen) {
             Screens.WELCOME -> {
-                replaceFragment(R.id.nav_host_fragment, WelcomeFragment(), "welcome", "welcome")
+                findNavController(R.id.nav_host_fragment).navigate(R.id.welcome_fragment)
             }
             Screens.HEALTH_STATUS -> {
-                replaceFragment(R.id.nav_host_fragment, HealthStatusFragment(), "health_status", "health_status")
+                findNavController(R.id.nav_host_fragment).navigate(R.id.health_status_fragment)
             }
             Screens.CONTACT -> {
-                replaceFragment(R.id.nav_host_fragment, ContactFragment(), "contact", "contact")
+                findNavController(R.id.nav_host_fragment).navigate(R.id.contact_fragment)
             }
             Screens.SETTINGS -> {
-                replaceFragment(R.id.nav_host_fragment, SettingsFragment(), "settings", "settings")
+                findNavController(R.id.nav_host_fragment).navigate(R.id.settings_fragment)
             }
         }
     }
-
-    protected fun replaceFragment(
-        @IdRes containerViewId: Int,
-        @NonNull fragment: Fragment?,
-        @NonNull fragmentTag: String?,
-        @Nullable backStackStateName: String?
-    ) {
-        supportFragmentManager.findFragmentById(containerViewId)?.let {
-            supportFragmentManager
-                .beginTransaction()
-                .remove(it).commit()
-        };
-
-        supportFragmentManager
-            .beginTransaction()
-            .replace(containerViewId, fragment!!, fragmentTag)
-            .addToBackStack(backStackStateName)
-            .commit()
-    }
-
-
 }

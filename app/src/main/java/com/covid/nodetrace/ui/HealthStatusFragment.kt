@@ -11,7 +11,8 @@ import androidx.fragment.app.Fragment
 import com.covid.nodetrace.R
 
 /**
- * A simple [Fragment] subclass as the second destination in the navigation.
+ * An overview of the health status of the user.
+ * The application gives options for setting their health status.
  */
 class HealthStatusFragment : Fragment() {
 

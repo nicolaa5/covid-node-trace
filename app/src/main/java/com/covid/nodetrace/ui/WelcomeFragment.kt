@@ -10,7 +10,8 @@ import androidx.navigation.fragment.findNavController
 import com.covid.nodetrace.R
 
 /**
- * A simple [Fragment] subclass as the default destination in the navigation.
+ * The first screen that a new user of the app sees.
+ * It shares some information about the application and how to use it.
  */
 class WelcomeFragment : Fragment() {
 
@@ -25,7 +26,7 @@ class WelcomeFragment : Fragment() {
         val button = view.findViewById<Button>(R.id.welcome_screen_button)
 
         button.setOnClickListener {
-            findNavController().navigate(R.id.HealthStatusFragment)
+            findNavController().navigate(R.id.health_status_fragment)
         }
     }
 }

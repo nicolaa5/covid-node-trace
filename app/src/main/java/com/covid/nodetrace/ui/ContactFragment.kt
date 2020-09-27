@@ -9,6 +9,10 @@ import androidx.fragment.app.Fragment
 import com.covid.nodetrace.ContactHistoryAdapter
 import com.covid.nodetrace.R
 
+/**
+ * The contact screen of the app indicates all the contacts that the user has had with people that
+ * were in the same vicinity and time period as them. It contains a list of encounters the user has had in the past
+ */
 class ContactFragment : Fragment() {
 
     private lateinit var contactHistoryListView : ListView
