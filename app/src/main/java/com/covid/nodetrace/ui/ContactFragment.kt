@@ -6,6 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ListView
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
+import com.covid.nodetrace.Contact
 import com.covid.nodetrace.ContactHistoryAdapter
 import com.covid.nodetrace.R
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -13,6 +15,7 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import java.util.Observer
 
 
 /**
@@ -20,6 +23,7 @@ import com.google.android.gms.maps.model.MarkerOptions
  * were in the same vicinity and time period as them. It contains a list of encounters the user has had in the past
  */
 class ContactFragment : Fragment(), OnMapReadyCallback {
+    private val model: AppViewModel by activityViewModels()
 
     private lateinit var contactHistoryListView : ListView
     private lateinit var contactHistoryAdapter : ContactHistoryAdapter
@@ -42,6 +46,10 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
         contactHistoryAdapter = ContactHistoryAdapter(requireActivity())
         contactHistoryListView.adapter = contactHistoryAdapter
         requireActivity().registerForContextMenu(contactHistoryListView)
+
+        model.contacts.observe(requireActivity(), androidx.lifecycle.Observer<List<Contact>>  { contacts ->
+            contactHistoryAdapter.updateValues(contacts)
+        })
     }
 
 

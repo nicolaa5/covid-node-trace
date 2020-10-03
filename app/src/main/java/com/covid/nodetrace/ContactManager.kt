@@ -10,9 +10,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.location.Location
 import android.location.LocationManager
-import android.os.Build
 import android.util.Log
-import androidx.annotation.RequiresApi
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
@@ -23,74 +21,96 @@ import com.covid.nodetrace.ContactService.Companion.NODE_FOUND
 import com.covid.nodetrace.ContactService.Companion.NODE_LOST
 import com.covid.nodetrace.database.AppDatabase
 import com.covid.nodetrace.permissions.Permissions
+import com.covid.nodetrace.ui.AppViewModel
 import kotlinx.coroutines.*
-import java.security.Timestamp
 import java.text.SimpleDateFormat
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import java.util.*
 import kotlin.collections.HashSet
 import kotlin.coroutines.CoroutineContext
 
-class ContactManager(context: Context, lifecycle: Lifecycle) : LifecycleObserver, CoroutineScope {
+class ContactManager(context: Context, lifecycle: Lifecycle, viewModel: AppViewModel) : LifecycleObserver, CoroutineScope {
     private val TAG = "ContactManager"
 
+    private val model : AppViewModel = viewModel
     override val coroutineContext: CoroutineContext = Dispatchers.Main + SupervisorJob()
     private lateinit var appDatabase : AppDatabase
     private var mContext : Context? = context
     private lateinit var contacts : HashSet<Contact>
+    private lateinit var mDataBroadcastReceiver: BroadcastReceiver
 
 
-    /**
-     * Broadcast receiver that receives data from the background service.
-     * Must be initialized before registering the LocalBroadcastManager receiver
-     */
-    private val mDataBroadcastReceiver: BroadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            val action = intent.action
-            when (action) {
-                NODE_FOUND -> {
-                    val foundID: String? = intent.getStringExtra("FOUND_ID")
-
-                    if (foundID == null)
-                        return
-
-                    val contact = createNewContact(foundID)
-                    contacts?.add(contact)
-                }
-                DISTANCE_UPDATED -> {
-                    val ID = intent.getStringExtra("ID")
-                    val distance: Double = intent.getDoubleExtra("DISTANCE", -1.0)
-
-                    if (distance == -1.0)
-                        return
-
-                    updateContactDistance(ID, distance)
-                }
-                NODE_LOST -> {
-                    val lostID = intent.getStringExtra("LOST_ID")
-                    val contact: Contact? = updateContactDuration(lostID, getCurrentUnixDate())
-
-                    //If contact can't be found we do not insert it into the database
-                    if (contact == null)
-                        return
-
-                    insertContact(contact)
-                }
-            }
-        }
-    }
 
     init {
         lifecycle.addObserver(this)
+        initializeBroadcastReceiver()
         LocalBroadcastManager.getInstance(context).registerReceiver(
             mDataBroadcastReceiver,
             makeBroadcastFilter()
         )
         contacts = HashSet<Contact>()
 
+    }
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_START)
+    fun onStart () {
+        updateUserInterfaceWithContactHistory()
+    }
+
+    /**
+     * Broadcast receiver that receives data from the background service.
+     * Must be initialized before registering the LocalBroadcastManager receiver
+     */
+    private fun initializeBroadcastReceiver () {
+        mDataBroadcastReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent) {
+                val action = intent.action
+                when (action) {
+                    NODE_FOUND -> {
+                        val foundID: String? = intent.getStringExtra("FOUND_ID")
+
+                        if (foundID == null)
+                            return
+
+                        val contact = createNewContact(foundID)
+                        contacts?.add(contact)
+                    }
+                    DISTANCE_UPDATED -> {
+                        val ID = intent.getStringExtra("ID")
+                        val distance: Double = intent.getDoubleExtra("DISTANCE", -1.0)
+
+                        if (distance == -1.0)
+                            return
+
+                        updateContactDistance(ID, distance)
+                    }
+                    NODE_LOST -> {
+                        val lostID = intent.getStringExtra("LOST_ID")
+                        val contact: Contact? = updateContactDuration(lostID, getCurrentUnixDate())
+
+                        //If contact can't be found we do not insert it into the database
+                        if (contact == null)
+                            return
+
+                        insertContact(contact)
+                        updateUserInterfaceWithContactHistory()
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Fetches all the found contacts from the local database and displays them within the
+     * Contact page of the app
+     */
+    fun updateUserInterfaceWithContactHistory () {
+        this.launch(Dispatchers.IO) {
+            val allContacts : List<Contact> = appDatabase.contactDao().getAll()
+
+            this.launch(Dispatchers.Main) {
+                model.contacts.value = allContacts
+            }
+        }
     }
 
     fun createDatabase(activity: Activity) {
@@ -106,7 +126,7 @@ class ContactManager(context: Context, lifecycle: Lifecycle) : LifecycleObserver
                 println(
                     "Contact -> " +
                             " ID: ${contact.ID}" +
-                            " date: " + UnixTimeStampToDateTime(contact.date) +
+                            " date: ${contact.date}" +
                             " duration: " + "${contact.duration / 1000f} sec" +
                             " distance: " + "${contact.distance} meter" +
                             " location: " + " {lat: ${contact.latitude}" + "," + " long: ${contact.longitude}}"
@@ -216,16 +236,5 @@ class ContactManager(context: Context, lifecycle: Lifecycle) : LifecycleObserver
         }
         return bestLocation
     }
-
-    fun UnixTimeStampToDateTime(unixTimeStamp: Long) : String? {
-        try {
-            val date = SimpleDateFormat("dd-MMM-yyyy hh:mm:ss")
-            val localDate = Date(unixTimeStamp)
-            return date.format(localDate)
-        } catch (e: Exception) {
-            return e.toString()
-        }
-    }
-
 }
 
