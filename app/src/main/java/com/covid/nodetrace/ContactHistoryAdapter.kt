@@ -4,11 +4,15 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.BaseAdapter
+import android.widget.TextView
+import com.covid.nodetrace.ui.DataFormatter
+
 
 class ContactHistoryAdapter(context: Context) : BaseAdapter() {
 
     private val mInflator: LayoutInflater
+    private val mContext = context
 
     private var mContacts : List<Contact> = listOf()
 
@@ -16,7 +20,7 @@ class ContactHistoryAdapter(context: Context) : BaseAdapter() {
         mInflator = LayoutInflater.from(context)
     }
 
-    fun updateValues (contacts : List<Contact>) {
+    fun updateValues(contacts: List<Contact>) {
         mContacts = contacts
         rerenderList()
     }
@@ -41,6 +45,8 @@ class ContactHistoryAdapter(context: Context) : BaseAdapter() {
         notifyDataSetChanged()
     }
 
+
+
     override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View? {
         val view: View?
         val row: ContactRow
@@ -53,14 +59,31 @@ class ContactHistoryAdapter(context: Context) : BaseAdapter() {
             row = view.tag as ContactRow
         }
 
-        val contact : Contact = mContacts.get(position)
-        row.contactDate.text = contact.date
-        row.contactDuration.text = contact.duration.toString()
-        row.contactDistance.text = contact.distance.toString()
-        row.contactLocation.text = contact.location.toString()
+        if (position == 0) {
+            row.contactDate.text = mContext.resources.getString(R.string.row_contact_date)
+            row.contactDuration.text = mContext.resources.getString(R.string.row_contact_duration)
+            row.contactDistance.text = mContext.resources.getString(R.string.row_contact_distance)
+            row.contactLocation.text = mContext.resources.getString(R.string.row_contact_location)
+
+        }
+        else {
+            val contact : Contact = mContacts.get(position)
+            row.contactDate.text = DataFormatter.createDateFormat(contact.date)
+            row.contactDuration.text = DataFormatter.createDurationFormat(contact.duration)
+            row.contactDistance.text = DataFormatter.createDistanceFormat(contact.distance)
+            row.contactLocation.text = DataFormatter.createLocationFormat(contact.latitude, contact.longitude)
+        }
         return view
     }
 }
+
+public enum class TimeRange {
+    SEC,
+    MIN,
+    HOURS
+}
+
+
 
 
 private class ContactRow(row: View?) {

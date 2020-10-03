@@ -11,15 +11,16 @@ import android.os.IBinder
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Observer
 import androidx.navigation.findNavController
 import com.covid.nodetrace.permissions.Permissions
 import com.covid.nodetrace.permissions.Permissions.requiredPermissions
+import com.covid.nodetrace.ui.AppViewModel
 import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.*
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -29,9 +30,11 @@ import kotlin.coroutines.CoroutineContext
 class MainActivity : AppCompatActivity(), CoroutineScope {
     private val TAG: String = MainActivity::class.java.getSimpleName()
 
+    private val model: AppViewModel by viewModels()
     override val coroutineContext: CoroutineContext = Dispatchers.Main + SupervisorJob()
     private lateinit var auth: FirebaseAuth
 
+    private lateinit var contactManager : ContactManager
     private var contactService : ContactService? = null
     private var mService: ContactService.LocalBinder? = null
     private var mServiceBonded : Boolean = false
@@ -69,10 +72,12 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         }
     }
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        contactManager = ContactManager(this, lifecycle,model)
+        contactManager.createDatabase(this)
 
         auth = FirebaseAuth.getInstance()
         authenticateUser(auth)
@@ -84,6 +89,10 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         Intent(this, ContactService::class.java).also { intent ->
             bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE)
         }
+
+        model.communicationType.observe(this, Observer<ContactService.CommunicationType> { communicationType ->
+            mService?.setCommunicationType(communicationType)
+        })
     }
 
     override fun onStart() {
@@ -94,6 +103,11 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
 
             }
         }
+
+        //Load screen that was open the previous time the app was closed
+        val sharedPref = getPreferences(Context.MODE_PRIVATE)
+        val storedScreenState : Int = sharedPref.getInt(getString(R.string.screen_state), 0)
+        showScreen(Screens.values()[storedScreenState])
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

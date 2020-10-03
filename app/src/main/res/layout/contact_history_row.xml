@@ -7,7 +7,7 @@
     android:layout_marginLeft="10dp"
     android:weightSum="4"
     android:orientation="horizontal"
-    android:descendantFocusability="blocksDescendants">
+    android:background="@drawable/border">
 
     <TextView
         android:id="@+id/row_contact_date"
@@ -19,8 +19,7 @@
         android:layout_centerVertical="true"
         android:layout_marginStart="5dp"
         android:text="@string/row_contact_date"
-        android:textSize="14sp"
-        android:textStyle="bold"
+        android:textSize="12sp"
         android:focusable="false"
         android:focusableInTouchMode="false"
         android:clickable="false"/>
@@ -37,8 +36,7 @@
         android:layout_centerVertical="true"
         android:layout_marginStart="5dp"
         android:text="@string/row_contact_duration"
-        android:textSize="14sp"
-        android:textStyle="bold"
+        android:textSize="12sp"
         android:focusable="false"
         android:focusableInTouchMode="false"
         android:clickable="false"/>
@@ -54,8 +52,7 @@
         android:layout_centerVertical="true"
         android:layout_marginStart="5dp"
         android:text="@string/row_contact_distance"
-        android:textSize="14sp"
-        android:textStyle="bold"
+        android:textSize="12sp"
         android:focusable="false"
         android:focusableInTouchMode="false"
         android:clickable="false"/>
@@ -72,8 +69,7 @@
         android:layout_centerVertical="true"
         android:layout_marginStart="5dp"
         android:text="@string/row_contact_location"
-        android:textSize="14sp"
-        android:textStyle="bold"
+        android:textSize="12sp"
         android:focusable="false"
         android:focusableInTouchMode="false"
         android:clickable="false"/>

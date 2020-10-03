@@ -14,4 +14,4 @@
 .cxx
 google-services.json
 app/src/main/res/raw/credentials.json
-gradle.properties
+secure.properties

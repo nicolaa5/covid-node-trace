@@ -1,18 +1,17 @@
 package com.covid.nodetrace
 
 import android.app.*
-import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
-import android.content.ServiceConnection
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
+import android.widget.Toast
 import androidx.core.app.NotificationCompat
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.google.android.gms.common.api.internal.ConnectionCallbacks
 import com.google.android.gms.nearby.Nearby
-import com.google.android.gms.nearby.messages.Message
-import com.google.android.gms.nearby.messages.MessageListener
+import com.google.android.gms.nearby.messages.*
 import java.util.*
 
 
@@ -32,6 +31,11 @@ public class ContactService() : Service() {
         SCAN_AND_ADVERTISE,
         NONE
     }
+    companion object {
+        val NODE_FOUND = "com.covid.nodetrace.ContactService.NODE_FOUND"
+        val NODE_LOST = "com.covid.nodetrace.ContactService.NODE_LOST"
+        val DISTANCE_UPDATED = "com.covid.nodetrace.ContactService.DISTANCE_UPDATED"
+    }
 
     /**
      * A unique 128-bit UUID is generated and send and used as the main
@@ -47,7 +51,7 @@ public class ContactService() : Service() {
     inner class LocalBinder : Binder() {
 
         fun setCommunicationType(type: CommunicationType) {
-            communicationType = type
+            updateCommunicationType(type)
         }
 
         /**
@@ -79,8 +83,17 @@ public class ContactService() : Service() {
         return getBinder()
     }
 
+    /**
+     * The app creates a 'foreground' service. This is a process that can run in the background of the app
+     * when the user is not actively interacting with the app.
+     *
+     * More information about foreground services can be found here:
+     * https://developer.android.com/guide/components/foreground-services
+     *
+     * If the system kills the service when running low on memory 'START_STICKY' tells the
+     * system to restart the service when enough resources are available again
+     */
     fun createForegroundService(activity: Activity, communicationType: CommunicationType) {
-
         createNotificationChannel()
         val notificationIntent = Intent(this, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(activity, 0, notificationIntent, 0)
@@ -124,17 +137,6 @@ public class ContactService() : Service() {
         startForeground(1, notification)
     }
 
-
-    /**
-     * The app creates a 'foreground' service. This is a process that can run in the background of the app
-     * when the user is not actively interacting with the app.
-     *
-     * More information about foreground services can be found here:
-     * https://developer.android.com/guide/components/foreground-services
-     *
-     * If the system kills the service when running low on memory 'START_STICKY' tells the
-     * system to restart the service when enough resources are available again
-     */
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         return START_STICKY
     }
@@ -188,17 +190,80 @@ public class ContactService() : Service() {
     fun scanForNearbyDevices () {
         messageListener = object : MessageListener() {
             override fun onFound(message: Message) {
-                val metUserUID = String(message.content)
-                Log.d(TAG, "Found user: $metUserUID")
+                val foundID = String(message.content)
+                Log.d(TAG, "Found ID: $foundID")
+
+                val broadcast: Intent = Intent(ContactService.NODE_FOUND)
+                    .putExtra("FOUND_ID", foundID)
+
+                LocalBroadcastManager.getInstance(baseContext).sendBroadcast(broadcast)
+                Toast.makeText(applicationContext, "Found device:  + ${foundID}", Toast.LENGTH_LONG).show()
             }
 
             override fun onLost(message: Message) {
-                val lostUserUID = String(message.content)
-                Log.d(TAG, "Lost sight of user: $lostUserUID")
+                val lostID = String(message.content)
+                Log.d(TAG, "Lost sight of ID: $lostID")
+
+                val broadcast: Intent = Intent(ContactService.NODE_LOST)
+                    .putExtra("LOST_ID", lostID)
+
+                LocalBroadcastManager.getInstance(applicationContext).sendBroadcast(broadcast)
+                Toast.makeText(applicationContext, "Lost device:  + ${lostID}", Toast.LENGTH_LONG).show()
+            }
+
+            override fun onDistanceChanged(message: Message?, distance: Distance?) {
+                super.onDistanceChanged(message, distance)
+
+                val content : ByteArray? = message?.content
+
+                if (content == null)
+                    return
+
+                val ID = String(content)
+
+                val broadcast: Intent = Intent(ContactService.DISTANCE_UPDATED)
+                    .putExtra("ID", ID)
+                    .putExtra("Distance", distance?.meters)
+
+                LocalBroadcastManager.getInstance(applicationContext).sendBroadcast(broadcast)
+
+
             }
         }
 
         Nearby.getMessagesClient(this).subscribe(messageListener!!)
     }
+
+    fun updateCommunicationType (newCommunicationType: CommunicationType) {
+        if (newCommunicationType == communicationType)
+            return
+
+        stopAdvertisingAndScanning()
+
+        when(newCommunicationType) {
+            CommunicationType.SCAN -> {
+                scanForNearbyDevices()
+            }
+            CommunicationType.ADVERTISE -> {
+                advertiseUniqueID()
+            }
+            CommunicationType.SCAN_AND_ADVERTISE -> {
+                scanForNearbyDevices()
+                advertiseUniqueID()
+            }
+            else -> {
+                Log.e(TAG, "Communication type not set")
+            }
+        }
+    }
+
+    fun stopAdvertisingAndScanning() {
+        if (uniqueMessage != null)
+            Nearby.getMessagesClient(this)?.unpublish(uniqueMessage!!)
+
+        if (messageListener != null)
+            Nearby.getMessagesClient(this)?.unsubscribe(messageListener!!)
+    }
+
 
 }
