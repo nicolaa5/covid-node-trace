@@ -100,6 +100,18 @@ class ContactManager(context: Context, lifecycle: Lifecycle) : LifecycleObserver
                 AppDatabase::class.java,
                 "contact-database"
             ).build()
+
+            val allContacts : List<Contact> = appDatabase.contactDao().getAll()
+            allContacts.forEach { contact ->
+                println(
+                    "Contact -> " +
+                            " ID: ${contact.ID}" +
+                            " date: " + UnixTimeStampToDateTime(contact.date) +
+                            " duration: " + "${contact.duration / 1000f} sec" +
+                            " distance: " + "${contact.distance} meter" +
+                            " location: " + " {lat: ${contact.latitude}" + "," + " long: ${contact.longitude}}"
+                )
+            }
         }
     }
 
@@ -205,7 +217,15 @@ class ContactManager(context: Context, lifecycle: Lifecycle) : LifecycleObserver
         return bestLocation
     }
 
-
+    fun UnixTimeStampToDateTime(unixTimeStamp: Long) : String? {
+        try {
+            val date = SimpleDateFormat("dd-MMM-yyyy hh:mm:ss")
+            val localDate = Date(unixTimeStamp)
+            return date.format(localDate)
+        } catch (e: Exception) {
+            return e.toString()
+        }
+    }
 
 }
 
