@@ -6,12 +6,12 @@ import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
+import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.google.android.gms.common.api.internal.ConnectionCallbacks
 import com.google.android.gms.nearby.Nearby
-import com.google.android.gms.nearby.messages.Distance
-import com.google.android.gms.nearby.messages.Message
-import com.google.android.gms.nearby.messages.MessageListener
+import com.google.android.gms.nearby.messages.*
 import java.util.*
 
 
@@ -143,6 +143,19 @@ public class ContactService() : Service() {
      * system to restart the service when enough resources are available again
      */
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        val options = PublishOptions.Builder()
+            .setStrategy(Strategy.BLE_ONLY)
+            .setCallback(object : PublishCallback() {
+                override fun onExpired() {
+                    super.onExpired()
+                    Toast.makeText(applicationContext, "Device expired", Toast.LENGTH_LONG).show()
+                }
+            })
+            .build()
+
+        val uniqueID = UUID.randomUUID().toString()
+        uniqueMessage = Message(uniqueID.toByteArray())
+        Nearby.getMessagesClient(this).publish(uniqueMessage!!,options)
         return START_STICKY
     }
 
@@ -202,6 +215,7 @@ public class ContactService() : Service() {
                     .putExtra("FOUND_ID", foundID)
 
                 LocalBroadcastManager.getInstance(applicationContext).sendBroadcast(broadcast)
+                Toast.makeText(applicationContext, "Found device:  + ${foundID}", Toast.LENGTH_LONG).show()
             }
 
             override fun onLost(message: Message) {
@@ -212,6 +226,7 @@ public class ContactService() : Service() {
                     .putExtra("LOST_ID", lostID)
 
                 LocalBroadcastManager.getInstance(applicationContext).sendBroadcast(broadcast)
+                Toast.makeText(applicationContext, "Lost device:  + ${lostID}", Toast.LENGTH_LONG).show()
             }
 
             override fun onDistanceChanged(message: Message?, distance: Distance?) {
