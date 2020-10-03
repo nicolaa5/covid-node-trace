@@ -32,9 +32,6 @@ public class ContactService() : Service() {
         NONE
     }
     companion object {
-        val BROADCAST_NODE_FOUND = "com.covid.nodetrace.ContactService.BROADCAST_NODE_FOUND"
-        val BROADCAST_NODE_LOST = "com.covid.nodetrace.ContactService.BROADCAST_NODE_LOST"
-        val BROADCAST_DISTANCE_UPDATED = "com.covid.nodetrace.ContactService.BROADCAST_DISTANCE_UPDATED"
         val NODE_FOUND = "com.covid.nodetrace.ContactService.NODE_FOUND"
         val NODE_LOST = "com.covid.nodetrace.ContactService.NODE_LOST"
         val DISTANCE_UPDATED = "com.covid.nodetrace.ContactService.DISTANCE_UPDATED"
@@ -214,7 +211,7 @@ public class ContactService() : Service() {
                 val broadcast: Intent = Intent(ContactService.NODE_FOUND)
                     .putExtra("FOUND_ID", foundID)
 
-                LocalBroadcastManager.getInstance(applicationContext).sendBroadcast(broadcast)
+                LocalBroadcastManager.getInstance(baseContext).sendBroadcast(broadcast)
                 Toast.makeText(applicationContext, "Found device:  + ${foundID}", Toast.LENGTH_LONG).show()
             }
 

@@ -10,18 +10,28 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.location.Location
 import android.location.LocationManager
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.room.Room
-import com.covid.nodetrace.ContactService.Companion.BROADCAST_DISTANCE_UPDATED
-import com.covid.nodetrace.ContactService.Companion.BROADCAST_NODE_FOUND
-import com.covid.nodetrace.ContactService.Companion.BROADCAST_NODE_LOST
+import com.covid.nodetrace.ContactService.Companion.DISTANCE_UPDATED
+import com.covid.nodetrace.ContactService.Companion.NODE_FOUND
+import com.covid.nodetrace.ContactService.Companion.NODE_LOST
 import com.covid.nodetrace.database.AppDatabase
 import com.covid.nodetrace.permissions.Permissions
 import kotlinx.coroutines.*
+import java.security.Timestamp
+import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.*
+import kotlin.collections.HashSet
 import kotlin.coroutines.CoroutineContext
 
 class ContactManager(context: Context, lifecycle: Lifecycle) : LifecycleObserver, CoroutineScope {
@@ -41,8 +51,8 @@ class ContactManager(context: Context, lifecycle: Lifecycle) : LifecycleObserver
         override fun onReceive(context: Context, intent: Intent) {
             val action = intent.action
             when (action) {
-                BROADCAST_NODE_FOUND -> {
-                    val foundID : String? = intent.getStringExtra("FOUND_ID")
+                NODE_FOUND -> {
+                    val foundID: String? = intent.getStringExtra("FOUND_ID")
 
                     if (foundID == null)
                         return
@@ -50,18 +60,18 @@ class ContactManager(context: Context, lifecycle: Lifecycle) : LifecycleObserver
                     val contact = createNewContact(foundID)
                     contacts?.add(contact)
                 }
-                BROADCAST_DISTANCE_UPDATED -> {
+                DISTANCE_UPDATED -> {
                     val ID = intent.getStringExtra("ID")
-                    val distance : Double = intent.getDoubleExtra("DISTANCE", -1.0)
+                    val distance: Double = intent.getDoubleExtra("DISTANCE", -1.0)
 
                     if (distance == -1.0)
                         return
 
                     updateContactDistance(ID, distance)
                 }
-                BROADCAST_NODE_LOST -> {
+                NODE_LOST -> {
                     val lostID = intent.getStringExtra("LOST_ID")
-                    val contact : Contact? = updateContactDuration(lostID, getCurrentUnixDate())
+                    val contact: Contact? = updateContactDuration(lostID, getCurrentUnixDate())
 
                     //If contact can't be found we do not insert it into the database
                     if (contact == null)
@@ -75,7 +85,10 @@ class ContactManager(context: Context, lifecycle: Lifecycle) : LifecycleObserver
 
     init {
         lifecycle.addObserver(this)
-        LocalBroadcastManager.getInstance(context).registerReceiver(mDataBroadcastReceiver,  makeBroadcastFilter())
+        LocalBroadcastManager.getInstance(context).registerReceiver(
+            mDataBroadcastReceiver,
+            makeBroadcastFilter()
+        )
         contacts = HashSet<Contact>()
 
     }
@@ -90,7 +103,7 @@ class ContactManager(context: Context, lifecycle: Lifecycle) : LifecycleObserver
         }
     }
 
-    fun createNewContact (ID : String) : Contact {
+    fun createNewContact(ID: String) : Contact {
         val date = getCurrentUnixDate()
         val location : Location? = getCurrentLocation()
 
@@ -101,7 +114,7 @@ class ContactManager(context: Context, lifecycle: Lifecycle) : LifecycleObserver
         }
     }
 
-    fun updateContactDistance(ID : String, distance : Double) {
+    fun updateContactDistance(ID: String, distance: Double) {
         for (contact in contacts) {
             if (contact.ID == ID) {
                 if (distance < contact.distance)
@@ -110,7 +123,7 @@ class ContactManager(context: Context, lifecycle: Lifecycle) : LifecycleObserver
         }
     }
 
-    fun updateContactDuration(ID : String, contactEnd : Long) : Contact? {
+    fun updateContactDuration(ID: String, contactEnd: Long) : Contact? {
         for (contact in contacts) {
             if (contact.ID == ID) {
                 contact.duration = contactEnd - contact.date
@@ -121,7 +134,9 @@ class ContactManager(context: Context, lifecycle: Lifecycle) : LifecycleObserver
     }
 
     fun insertContact(contact: Contact) {
-        appDatabase.contactDao().insert(contact)
+        this.launch(Dispatchers.IO) {
+            appDatabase.contactDao().insert(contact)
+        }
     }
 
 
@@ -152,7 +167,10 @@ class ContactManager(context: Context, lifecycle: Lifecycle) : LifecycleObserver
             return null
 
         //If location permission has not been granted have to stop as we can't request permission while the app is in the background
-        if (!Permissions.hasPermissions(mContext!!, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION))) {
+        if (!Permissions.hasPermissions(
+                mContext!!,
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
+            )) {
             return null
         }
 
