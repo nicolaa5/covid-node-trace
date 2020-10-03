@@ -14,6 +14,7 @@ import android.view.MenuItem
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Observer
 import androidx.navigation.findNavController
 import com.covid.nodetrace.permissions.Permissions
 import com.covid.nodetrace.permissions.Permissions.requiredPermissions
@@ -88,6 +89,10 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         Intent(this, ContactService::class.java).also { intent ->
             bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE)
         }
+
+        model.communicationType.observe(this, Observer<ContactService.CommunicationType> { communicationType ->
+            mService?.setCommunicationType(communicationType)
+        })
     }
 
     override fun onStart() {

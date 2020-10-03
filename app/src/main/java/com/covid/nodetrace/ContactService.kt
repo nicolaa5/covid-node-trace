@@ -51,7 +51,7 @@ public class ContactService() : Service() {
     inner class LocalBinder : Binder() {
 
         fun setCommunicationType(type: CommunicationType) {
-            communicationType = type
+            updateCommunicationType(type)
         }
 
         /**
@@ -83,8 +83,17 @@ public class ContactService() : Service() {
         return getBinder()
     }
 
+    /**
+     * The app creates a 'foreground' service. This is a process that can run in the background of the app
+     * when the user is not actively interacting with the app.
+     *
+     * More information about foreground services can be found here:
+     * https://developer.android.com/guide/components/foreground-services
+     *
+     * If the system kills the service when running low on memory 'START_STICKY' tells the
+     * system to restart the service when enough resources are available again
+     */
     fun createForegroundService(activity: Activity, communicationType: CommunicationType) {
-
         createNotificationChannel()
         val notificationIntent = Intent(this, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(activity, 0, notificationIntent, 0)
@@ -128,31 +137,7 @@ public class ContactService() : Service() {
         startForeground(1, notification)
     }
 
-
-    /**
-     * The app creates a 'foreground' service. This is a process that can run in the background of the app
-     * when the user is not actively interacting with the app.
-     *
-     * More information about foreground services can be found here:
-     * https://developer.android.com/guide/components/foreground-services
-     *
-     * If the system kills the service when running low on memory 'START_STICKY' tells the
-     * system to restart the service when enough resources are available again
-     */
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val options = PublishOptions.Builder()
-            .setStrategy(Strategy.BLE_ONLY)
-            .setCallback(object : PublishCallback() {
-                override fun onExpired() {
-                    super.onExpired()
-                    Toast.makeText(applicationContext, "Device expired", Toast.LENGTH_LONG).show()
-                }
-            })
-            .build()
-
-        val uniqueID = UUID.randomUUID().toString()
-        uniqueMessage = Message(uniqueID.toByteArray())
-        Nearby.getMessagesClient(this).publish(uniqueMessage!!,options)
         return START_STICKY
     }
 
@@ -248,5 +233,37 @@ public class ContactService() : Service() {
 
         Nearby.getMessagesClient(this).subscribe(messageListener!!)
     }
+
+    fun updateCommunicationType (newCommunicationType: CommunicationType) {
+        if (newCommunicationType == communicationType)
+            return
+
+        stopAdvertisingAndScanning()
+
+        when(newCommunicationType) {
+            CommunicationType.SCAN -> {
+                scanForNearbyDevices()
+            }
+            CommunicationType.ADVERTISE -> {
+                advertiseUniqueID()
+            }
+            CommunicationType.SCAN_AND_ADVERTISE -> {
+                scanForNearbyDevices()
+                advertiseUniqueID()
+            }
+            else -> {
+                Log.e(TAG, "Communication type not set")
+            }
+        }
+    }
+
+    fun stopAdvertisingAndScanning() {
+        if (uniqueMessage != null)
+            Nearby.getMessagesClient(this)?.unpublish(uniqueMessage!!)
+
+        if (messageListener != null)
+            Nearby.getMessagesClient(this)?.unsubscribe(messageListener!!)
+    }
+
 
 }
