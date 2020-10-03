@@ -11,14 +11,10 @@ import androidx.fragment.app.activityViewModels
 import com.covid.nodetrace.Contact
 import com.covid.nodetrace.ContactHistoryAdapter
 import com.covid.nodetrace.R
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.CircleOptions
+import com.google.android.gms.maps.*
+import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
-import java.util.Observer
 
 
 /**
@@ -31,7 +27,8 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
     private lateinit var contactHistoryListView : ListView
     private lateinit var contactHistoryAdapter : ContactHistoryAdapter
 
-    private lateinit var mMap: GoogleMap
+    private lateinit var mMap: MapView
+    private lateinit var mGoogleMap: GoogleMap
     private lateinit var latestContactDate : TextView
     private lateinit var latestContactDuration : TextView
     private lateinit var latestContactDistance : TextView
@@ -56,11 +53,52 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
         contactHistoryListView.adapter = contactHistoryAdapter
         requireActivity().registerForContextMenu(contactHistoryListView)
 
-        model.contacts.observe(requireActivity(),androidx.lifecycle.Observer<List<Contact>> { contacts ->
+        model.contacts.observe(
+            requireActivity(),
+            androidx.lifecycle.Observer<List<Contact>> { contacts ->
                 contactHistoryAdapter.updateValues(contacts)
                 displayLatestContact(contacts)
             }
         )
+
+        val mapOptions : GoogleMapOptions = GoogleMapOptions().camera(
+            CameraPosition.fromLatLngZoom(LatLng(59.0, 18.0), 100f)
+        )
+
+        mapOptions.maxZoomPreference
+        mMap = view?.findViewById(R.id.contact_map) as MapView
+        mMap?.onCreate(savedInstanceState)
+        mMap?.getMapAsync(this)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        mMap.onStart()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        mMap.onResume()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        onPause()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        mMap.onStop()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        onDestroy()
+    }
+
+    override fun onLowMemory() {
+        super.onLowMemory()
+        mMap.onLowMemory()
     }
 
     private fun displayLatestContact(contacts: List<Contact>) {
@@ -72,9 +110,9 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
                 latestContact = contact
             }
         }
-        latestContactDate.text = DataFormatter.createDateFormat(latestContact.date)
-        latestContactDuration.text = DataFormatter.createDurationFormat(latestContact.duration)
-        latestContactDistance.text = DataFormatter.createDistanceFormat(latestContact.distance)
+        latestContactDate.text = "Date: " + DataFormatter.createDateFormat(latestContact.date)
+        latestContactDuration.text = "Duration: " + DataFormatter.createDurationFormat(latestContact.duration)
+        latestContactDistance.text = "Distance: " + DataFormatter.createDistanceFormat(latestContact.distance)
     }
 
     /**
@@ -87,13 +125,16 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
      * installed Google Play services and returned to the app.
      */
     override fun onMapReady(googleMap: GoogleMap) {
-        mMap = googleMap
+        mGoogleMap = googleMap
 
         // Add a marker in Stockholm and move the camera
-        val stockholm = LatLng(59.0, 18.0)
-        mMap.addMarker(MarkerOptions()
-            .position(stockholm)
-            .title("Marker in Stockholm"))
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(stockholm))
+        val stockholm = LatLng(59.331264, 18.064854)
+        mGoogleMap.setMinZoomPreference(10f)
+        mGoogleMap.addMarker(
+            MarkerOptions()
+                .position(stockholm)
+                .title("Marker in Stockholm")
+        )
+        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(stockholm))
     }
 }

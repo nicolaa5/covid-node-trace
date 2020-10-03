@@ -18,12 +18,10 @@
             android:layout_height="200dp"
             app:cardCornerRadius="100dp">
 
-            <fragment
+            <com.google.android.gms.maps.MapView
                 android:id="@+id/contact_map"
-                android:name="com.google.android.gms.maps.SupportMapFragment"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                tools:context=".MainActivity"/>
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent" />
 
         </androidx.cardview.widget.CardView>
 
@@ -43,16 +41,6 @@
                 android:gravity="center_horizontal"
                 android:text="@string/contact_date"
                 android:textSize="18sp" />
-
-            <TextView
-                android:id="@+id/contact_time"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center_horizontal"
-                android:text="@string/contact_time"
-                android:textSize="18sp" />
-
             <TextView
                 android:id="@+id/contact_duration"
                 android:layout_width="match_parent"
