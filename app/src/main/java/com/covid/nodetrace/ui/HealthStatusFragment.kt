@@ -70,7 +70,6 @@ class HealthStatusFragment : Fragment(), CoroutineScope {
                 apply()
             }
         }
-
     }
 
     override fun onDestroy() {
@@ -81,7 +80,6 @@ class HealthStatusFragment : Fragment(), CoroutineScope {
     fun postUpdatedHealthStatusToDatabase () {
         this.launch(Dispatchers.IO) {
             val appDatabase = AppDatabase.getInstance(requireContext())
-
 
             val today = System.currentTimeMillis()
             val fourteenDaysAgo = today - TimeUnit.DAYS.toMillis(14)
@@ -94,7 +92,7 @@ class HealthStatusFragment : Fragment(), CoroutineScope {
             this.launch(Dispatchers.Default) {
                 var uploadedIDs : MutableList<String> = mutableListOf()
                 contactIDs.forEach{contactID ->
-                    val fileUploaded = DatabaseFactory.getFirebaseDatabase().create(contactID)
+                    val fileUploaded = DatabaseFactory.getFirebaseDatabase().create(requireContext(), contactID)
 
                     if (fileUploaded)
                         uploadedIDs.add(contactID)

@@ -20,6 +20,7 @@ import com.covid.nodetrace.ContactService.Companion.DISTANCE_UPDATED
 import com.covid.nodetrace.ContactService.Companion.NODE_FOUND
 import com.covid.nodetrace.ContactService.Companion.NODE_LOST
 import com.covid.nodetrace.database.AppDatabase
+import com.covid.nodetrace.database.DatabaseFactory
 import com.covid.nodetrace.permissions.Permissions
 import com.covid.nodetrace.ui.AppViewModel
 import kotlinx.coroutines.*
@@ -126,6 +127,37 @@ class ContactManager(context: Context, lifecycle: Lifecycle, viewModel: AppViewM
                             " distance: " + "${contact.distance} meter" +
                             " location: " + " {lat: ${contact.latitude}" + "," + " long: ${contact.longitude}}"
                 )
+            }
+        }
+    }
+
+
+    fun checkForRiskContacts () {
+
+        this.launch(Dispatchers.Default) {
+            if (mContext == null)
+                return@launch
+
+            val contactIDsRetrieved = DatabaseFactory.getFirebaseDatabase().read(mContext!!)
+
+            compareDatabaseIDsToLocalIDs(contactIDsRetrieved)
+        }
+    }
+
+    suspend fun compareDatabaseIDsToLocalIDs (databaseContactIDs : List<String>) {
+        withContext(Dispatchers.IO) {
+            val localContacts : List<Contact> = appDatabase.contactDao().getAll()
+            val localContactIDs : List<String> = localContacts.map { contact -> contact.ID }
+
+            val riskContactIDs = localContactIDs.filter { localContact -> databaseContactIDs.contains(localContact) }
+            updateContactRiskLevel(riskContactIDs)
+        }
+    }
+
+    suspend fun updateContactRiskLevel (riskContactIDs : List<String>) {
+        withContext(Dispatchers.IO){
+            riskContactIDs.forEach{ contactID ->
+                appDatabase.contactDao().updateHealthStatus(contactID, HealthStatus.SICK.toString())
             }
         }
     }

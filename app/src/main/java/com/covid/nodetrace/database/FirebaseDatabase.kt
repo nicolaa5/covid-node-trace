@@ -2,10 +2,11 @@ package com.covid.nodetrace.database
 
 import android.content.Context
 import android.util.Log
-import com.covid.nodetrace.Contact
+import com.covid.nodetrace.util.NetworkHelper
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Source
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
@@ -19,31 +20,69 @@ class FirebaseDatabase () : FirebaseDao {
         contactsCollection = db.collection("contacts");
     }
 
-    override suspend fun create(contactID : String) : Boolean = suspendCancellableCoroutine { continuation ->
-
-        val contactEntry : Map<String, String> = mapOf(Pair("id", contactID))
-        val newContactEntry: DocumentReference = contactsCollection.document("IDs")
-        newContactEntry.set(contactEntry)
-            .addOnSuccessListener { continuation.resume(true)}
-            .addOnFailureListener { failureReason ->
-                continuation.resume(false)
-                Log.e(TAG, failureReason.message ?: failureReason.toString())
-            }
-            .addOnCanceledListener {
-                continuation.resume(false)
-                Log.e(TAG, "Upload cancelled")
-            }
+    override suspend fun create(context: Context, contactID: String) : Boolean = suspendCancellableCoroutine { continuation ->
+        if (NetworkHelper.isConnectedToNetwork(context)) {
+            val newID: Map<String, String> = mapOf(Pair("ID", contactID))
+            val IDs: DocumentReference = contactsCollection.document(contactID)
+            IDs.set(newID)
+                .addOnSuccessListener { continuation.resume(true) }
+                .addOnFailureListener { failureReason ->
+                    continuation.cancel()
+                    Log.e(TAG, failureReason.message ?: failureReason.toString())
+                }
+                .addOnCanceledListener {
+                    continuation.cancel()
+                    Log.e(TAG, "Upload cancelled")
+                }
+        }
+        else {
+            continuation.cancel()
+        }
     }
 
-    override suspend fun read(contactID: String) : Boolean {
+    override suspend fun read(context: Context) : List<String> = suspendCancellableCoroutine { continuation ->
+        val IDs: CollectionReference = contactsCollection
+
+        if (NetworkHelper.isConnectedToNetwork(context)) {
+            IDs.get()
+                .addOnSuccessListener { idList ->
+                    val contactIDList : List<String> = idList.documents.map{document -> document.data?.getValue("ID")  as String }  as List<String>
+                    continuation.resume(contactIDList)
+                }
+                .addOnFailureListener { failureReason ->
+                    continuation.cancel()
+                    Log.e(TAG, failureReason.message ?: failureReason.toString())
+                }
+                .addOnCanceledListener {
+                    continuation.cancel()
+                    Log.e(TAG, "Upload cancelled")
+                }
+        }
+        else {
+            // Since we're not connected to the database we get the data from the cache
+            val source = Source.CACHE
+
+            IDs.get(source)
+                .addOnSuccessListener { idList ->
+                    val contactIDList : List<String> = idList.documents.map{document -> document.data?.getValue("ID")  as String }  as List<String>
+                    continuation.resume(contactIDList)
+                }
+                .addOnFailureListener { failureReason ->
+                    continuation.cancel()
+                    Log.e(TAG, failureReason.message ?: failureReason.toString())
+                }
+                .addOnCanceledListener {
+                    continuation.cancel()
+                    Log.e(TAG, "Upload cancelled")
+                }
+        }
+    }
+
+    override suspend fun update(context: Context, contactID: String) : Boolean{
         TODO("Not yet implemented")
     }
 
-    override suspend fun update(contactID: String) : Boolean{
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun delete(contactID: String) : Boolean {
+    override suspend fun delete(context: Context, contactID: String) : Boolean {
         TODO("Not yet implemented")
     }
 }
