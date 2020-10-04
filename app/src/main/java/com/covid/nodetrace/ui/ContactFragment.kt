@@ -39,6 +39,12 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
     private lateinit var sheetBehavior : BottomSheetBehavior<NestedScrollView>
     private var mGoogleMap: GoogleMap? = null
     private lateinit var mMap: MapView
+
+    private lateinit var healthStatusTitle : TextView
+    private lateinit var dateTitle : TextView
+    private lateinit var durationTitle : TextView
+    private lateinit var distanceTitle : TextView
+
     private lateinit var contactHealthStatus : TextView
     private lateinit var contactDate : TextView
     private lateinit var contactDuration : TextView
@@ -58,6 +64,12 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         contactHistoryListView = view.findViewById(R.id.contact_history_list_view) as ListView
+
+        healthStatusTitle = view.findViewById(R.id.health_title) as TextView
+        dateTitle = view.findViewById(R.id.date_title) as TextView
+        durationTitle = view.findViewById(R.id.duration_title) as TextView
+        distanceTitle = view.findViewById(R.id.distance_title) as TextView
+
         contactHealthStatus = view.findViewById(R.id.contact_health_status) as TextView
         contactDate = view.findViewById(R.id.contact_date) as TextView
         contactDuration = view.findViewById(R.id.contact_duration) as TextView
@@ -170,6 +182,11 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun displayContactData(contact : Contact) {
+        healthStatusTitle.setVisibility(View.VISIBLE)
+        dateTitle.setVisibility(View.VISIBLE)
+        durationTitle.setVisibility(View.VISIBLE)
+        distanceTitle.setVisibility(View.VISIBLE)
+
         var textColor = Color.GRAY
         val status : HealthStatus = HealthStatus.valueOf(contact.healthStatus)
 

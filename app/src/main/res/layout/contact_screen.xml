@@ -37,6 +37,7 @@
 
             <TextView
                 android:id="@+id/health_title"
+                android:visibility="invisible"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
@@ -54,6 +55,7 @@
 
             <TextView
                 android:id="@+id/date_title"
+                android:visibility="invisible"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
@@ -71,6 +73,7 @@
 
             <TextView
                 android:id="@+id/duration_title"
+                android:visibility="invisible"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
@@ -89,6 +92,7 @@
 
             <TextView
                 android:id="@+id/distance_title"
+                android:visibility="invisible"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"

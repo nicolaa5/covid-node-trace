@@ -24,7 +24,7 @@ object DataFormatter {
         val minutes : Long = TimeUnit.MILLISECONDS.toMinutes(durationInMilliseconds) % 60
         val hours : Long = TimeUnit.MILLISECONDS.toHours(durationInMilliseconds) % 60
 
-        val timeRange : TimeRange = if (minutes < 1L) TimeRange.SEC else if (minutes > 1L && hours < 1L) TimeRange.MIN else TimeRange.HOURS
+        val timeRange : TimeRange = if (minutes < 1L) TimeRange.SEC else if (minutes >= 1L && hours < 1L) TimeRange.MIN else TimeRange.HOURS
 
         when(timeRange) {
             TimeRange.SEC -> {
