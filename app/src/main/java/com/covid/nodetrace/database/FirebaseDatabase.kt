@@ -22,8 +22,8 @@ class FirebaseDatabase () : FirebaseDao {
 
     override suspend fun create(context: Context, contactID: String) : Boolean = suspendCancellableCoroutine { continuation ->
         if (NetworkHelper.isConnectedToNetwork(context)) {
-            val newID: Map<String, String> = mapOf(Pair("id", contactID))
-            val IDs: DocumentReference = contactsCollection.document("IDs")
+            val newID: Map<String, String> = mapOf(Pair("ID", contactID))
+            val IDs: DocumentReference = contactsCollection.document(contactID)
             IDs.set(newID)
                 .addOnSuccessListener { continuation.resume(true) }
                 .addOnFailureListener { failureReason ->
@@ -41,12 +41,12 @@ class FirebaseDatabase () : FirebaseDao {
     }
 
     override suspend fun read(context: Context) : List<String> = suspendCancellableCoroutine { continuation ->
-        val IDs: DocumentReference = contactsCollection.document("IDs")
+        val IDs: CollectionReference = contactsCollection
 
         if (NetworkHelper.isConnectedToNetwork(context)) {
             IDs.get()
                 .addOnSuccessListener { idList ->
-                    val contactIDList : List<String> = idList.data?.map { data -> data.value as String } as List<String>
+                    val contactIDList : List<String> = idList.documents.map{document -> document.data?.getValue("ID")  as String }  as List<String>
                     continuation.resume(contactIDList)
                 }
                 .addOnFailureListener { failureReason ->
@@ -64,7 +64,7 @@ class FirebaseDatabase () : FirebaseDao {
 
             IDs.get(source)
                 .addOnSuccessListener { idList ->
-                    val contactIDList : List<String> = idList.data?.map { data -> data.value as String } as List<String>
+                    val contactIDList : List<String> = idList.documents.map{document -> document.data?.getValue("ID")  as String }  as List<String>
                     continuation.resume(contactIDList)
                 }
                 .addOnFailureListener { failureReason ->

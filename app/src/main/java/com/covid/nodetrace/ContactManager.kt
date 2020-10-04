@@ -132,7 +132,7 @@ class ContactManager(context: Context, lifecycle: Lifecycle, viewModel: AppViewM
     }
 
 
-    fun getContactIDsFromDatabase () {
+    fun checkForRiskContacts () {
 
         this.launch(Dispatchers.Default) {
             if (mContext == null)

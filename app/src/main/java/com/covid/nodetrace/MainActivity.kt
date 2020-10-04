@@ -114,6 +114,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         val sharedPref = getPreferences(Context.MODE_PRIVATE)
         val storedScreenState : Int = sharedPref.getInt(getString(R.string.screen_state), 0)
         showScreen(Screens.values()[storedScreenState])
+
+        contactManager.checkForRiskContacts()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
