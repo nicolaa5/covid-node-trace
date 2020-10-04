@@ -1,6 +1,7 @@
-package com.covid.nodetrace.ui
+package com.covid.nodetrace.util
 
-import com.covid.nodetrace.TimeRange
+import com.covid.nodetrace.HealthStatus
+import com.covid.nodetrace.ui.TimeRange
 import java.math.RoundingMode
 import java.text.SimpleDateFormat
 import java.util.*
@@ -8,12 +9,22 @@ import java.util.concurrent.TimeUnit
 
 object DataFormatter {
 
+    fun createHealthStatusFormat(healthStatus: HealthStatus): String {
+        when(healthStatus) {
+            HealthStatus.HEALTHY -> {
+                return "Safe"
+            }
+            HealthStatus.SICK -> {
+                return "Risk"
+            }
+        }
+    }
     fun createDurationFormat(durationInMilliseconds : Long) : String {
         val seconds : Long = TimeUnit.MILLISECONDS.toSeconds(durationInMilliseconds) % 60
         val minutes : Long = TimeUnit.MILLISECONDS.toMinutes(durationInMilliseconds) % 60
         val hours : Long = TimeUnit.MILLISECONDS.toHours(durationInMilliseconds) % 60
 
-        val timeRange : TimeRange = if (minutes < 1L) TimeRange.SEC else if (minutes > 1L && hours < 1L) TimeRange.MIN else TimeRange.HOURS
+        val timeRange : TimeRange = if (minutes < 1L) TimeRange.SEC else if (minutes >= 1L && hours < 1L) TimeRange.MIN else TimeRange.HOURS
 
         when(timeRange) {
             TimeRange.SEC -> {
@@ -52,6 +63,15 @@ object DataFormatter {
             return "- , -"
         else return latitude.toBigDecimal().setScale(2, RoundingMode.UP).toString() +", " +
                 longitude.toBigDecimal().setScale(2, RoundingMode.UP).toString()
+    }
+    fun createShortDateFormat(unixTimeStamp: Long) : String? {
+        try {
+            val date = SimpleDateFormat("dd-MMM-yy")
+            val localDate = Date(unixTimeStamp)
+            return date.format(localDate)
+        } catch (e: Exception) {
+            return e.toString()
+        }
     }
 
     fun createDateFormat(unixTimeStamp: Long) : String? {

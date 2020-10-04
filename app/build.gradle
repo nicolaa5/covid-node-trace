@@ -82,17 +82,19 @@ dependencies {
     implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.0.0'
     implementation 'no.nordicsemi.android.support.v18:scanner:1.4.2'
 
-
     //Nearby communications Library
     implementation 'com.google.android.gms:play-services-nearby:17.0.0'
-
-    //Authentication libraries
-    implementation 'com.google.firebase:firebase-auth:19.4.0'
 
     //Map libraries
     implementation 'com.google.maps.android:android-maps-utils:1.0.2'
     implementation 'com.google.android.gms:play-services-maps:17.0.0'
     implementation 'com.google.android.gms:play-services-location:17.0.0'
+
+    //Authentication libraries
+    implementation 'com.google.firebase:firebase-auth:19.4.0'
+
+    //Firestore database
+    implementation 'com.google.firebase:firebase-firestore:21.6.0'
 
     //Android local database
     implementation "androidx.room:room-runtime:2.2.5"

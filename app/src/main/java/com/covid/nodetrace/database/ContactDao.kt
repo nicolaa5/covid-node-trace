@@ -2,11 +2,15 @@ package com.covid.nodetrace.database
 
 import androidx.room.*
 import com.covid.nodetrace.Contact
+import com.covid.nodetrace.HealthStatus
 
 @Dao
 interface ContactDao {
     @Query("SELECT * FROM Contact")
     fun getAll(): List<Contact>
+
+    @Query("SELECT * FROM Contact WHERE Contact.date > (:fromDate) & Contact.date < (:untilDate)")
+    fun getContactsWithinTimePeriod(fromDate : Long, untilDate : Long): List<Contact>
 
     @Query("SELECT * FROM Contact WHERE ID IN (:ContactListPosition)")
     fun loadAllByPosition(ContactListPosition: IntArray): List<Contact>
@@ -28,4 +32,7 @@ interface ContactDao {
 
     @Query("UPDATE Contact SET ID = :newID WHERE ID = :oldID")
     fun update(newID : String, oldID : String)
+
+    @Query("UPDATE Contact SET health_status = :newHealthStatus WHERE ID = :contactID")
+    fun updateHealthStatus(contactID : String, newHealthStatus : String)
 }

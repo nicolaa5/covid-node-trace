@@ -1,12 +1,17 @@
-package com.covid.nodetrace
+package com.covid.nodetrace.ui
 
 import android.content.Context
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.TextView
-import com.covid.nodetrace.ui.DataFormatter
+import com.covid.nodetrace.Contact
+import com.covid.nodetrace.HealthStatus
+import com.covid.nodetrace.R
+import com.covid.nodetrace.util.DataFormatter
+import java.net.CookieHandler
 
 
 class ContactHistoryAdapter(context: Context) : BaseAdapter() {
@@ -60,10 +65,14 @@ class ContactHistoryAdapter(context: Context) : BaseAdapter() {
         }
 
         val contact : Contact = mContacts.get(position)
-        row.contactDate.text = DataFormatter.createDateFormat(contact.date)
+        val status : HealthStatus = HealthStatus.valueOf(contact.healthStatus)
+
+        row.contactHealthStatus.text = DataFormatter.createHealthStatusFormat(status)
+        row.contactDate.text = DataFormatter.createShortDateFormat(contact.date)
         row.contactDuration.text = DataFormatter.createDurationFormat(contact.duration)
         row.contactDistance.text = DataFormatter.createDistanceFormat(contact.distance)
         row.contactLocation.text = DataFormatter.createLocationFormat(contact.latitude, contact.longitude)
+
         return view
     }
 }
@@ -78,12 +87,14 @@ public enum class TimeRange {
 
 
 private class ContactRow(row: View?) {
+    public val contactHealthStatus: TextView
     public val contactDate: TextView
     public val contactDuration: TextView
     public val contactDistance: TextView
     public val contactLocation: TextView
 
     init {
+        contactHealthStatus = row?.findViewById(R.id.row_contact_health_status) as TextView
         contactDate = row?.findViewById(R.id.row_contact_date) as TextView
         contactDuration = row?.findViewById(R.id.row_contact_duration) as TextView
         contactDistance = row?.findViewById(R.id.row_contact_distance) as TextView
