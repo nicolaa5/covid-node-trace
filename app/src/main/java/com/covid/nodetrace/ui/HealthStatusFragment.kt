@@ -78,10 +78,19 @@ class HealthStatusFragment : Fragment(), CoroutineScope {
         coroutineContext[Job]!!.cancel()
     }
 
+    fun getContactIDsFromDatabase () {
+        this.launch(Dispatchers.Default) {
+            val contactIDsRetrieved = DatabaseFactory.getFirebaseDatabase().read(requireContext())
+
+            this.launch(Dispatchers.IO) {
+                val appDatabase = AppDatabase.getInstance(requireContext())
+            }
+        }
+    }
+
     fun postUpdatedHealthStatusToDatabase () {
         this.launch(Dispatchers.IO) {
             val appDatabase = AppDatabase.getInstance(requireContext())
-
 
             val today = System.currentTimeMillis()
             val fourteenDaysAgo = today - TimeUnit.DAYS.toMillis(14)
@@ -94,7 +103,7 @@ class HealthStatusFragment : Fragment(), CoroutineScope {
             this.launch(Dispatchers.Default) {
                 var uploadedIDs : MutableList<String> = mutableListOf()
                 contactIDs.forEach{contactID ->
-                    val fileUploaded = DatabaseFactory.getFirebaseDatabase().create(contactID)
+                    val fileUploaded = DatabaseFactory.getFirebaseDatabase().create(requireContext(), contactID)
 
                     if (fileUploaded)
                         uploadedIDs.add(contactID)
