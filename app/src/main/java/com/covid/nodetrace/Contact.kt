@@ -9,8 +9,8 @@ import androidx.room.PrimaryKey
 open class Contact (
     @PrimaryKey open val ID : String,
     @ColumnInfo(name = "date") open val date : Long,
-    @ColumnInfo(name = "latitude") open var latitude : Double = -1.0,
-    @ColumnInfo(name = "longitude") open var longitude : Double = -1.0,
+    @ColumnInfo(name = "latitude") open var latitude : Double = 0.0,
+    @ColumnInfo(name = "longitude") open var longitude : Double = 0.0,
     @ColumnInfo(name = "duration") open var duration : Long = -1,
     @ColumnInfo(name = "distance") open var distance : Double = -1.0) {
 

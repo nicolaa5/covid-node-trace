@@ -48,8 +48,8 @@ object DataFormatter {
     }
 
     fun createLocationFormat (latitude : Double, longitude : Double) : String {
-        if (latitude == -1.0 || longitude == -1.0)
-            return ""
+        if (latitude == 0.0 || longitude == 0.0)
+            return "- , -"
         else return latitude.toBigDecimal().setScale(2, RoundingMode.UP).toString() +", " +
                 longitude.toBigDecimal().setScale(2, RoundingMode.UP).toString()
     }

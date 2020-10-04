@@ -25,16 +25,17 @@
             android:text="@string/history_sheet_title"
             android:textSize="20sp" />
 
+        <include layout="@layout/contact_history_title_row" />
 
         <ListView
             android:id="@+id/contact_history_list_view"
-            android:layout_marginTop="10dp"
-            android:layout_marginLeft="20dp"
-            android:layout_marginRight="20dp"
             android:layout_width="fill_parent"
+            android:layout_height="450dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginRight="20dp"
             android:drawSelectorOnTop="false"
-            android:listSelector="@color/grey"
-            android:layout_height="450dp"/>
+            android:listSelector="@color/grey" />
 
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

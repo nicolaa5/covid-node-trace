@@ -59,20 +59,11 @@ class ContactHistoryAdapter(context: Context) : BaseAdapter() {
             row = view.tag as ContactRow
         }
 
-        if (position == 0) {
-            row.contactDate.text = mContext.resources.getString(R.string.row_contact_date)
-            row.contactDuration.text = mContext.resources.getString(R.string.row_contact_duration)
-            row.contactDistance.text = mContext.resources.getString(R.string.row_contact_distance)
-            row.contactLocation.text = mContext.resources.getString(R.string.row_contact_location)
-
-        }
-        else {
-            val contact : Contact = mContacts.get(position)
-            row.contactDate.text = DataFormatter.createDateFormat(contact.date)
-            row.contactDuration.text = DataFormatter.createDurationFormat(contact.duration)
-            row.contactDistance.text = DataFormatter.createDistanceFormat(contact.distance)
-            row.contactLocation.text = DataFormatter.createLocationFormat(contact.latitude, contact.longitude)
-        }
+        val contact : Contact = mContacts.get(position)
+        row.contactDate.text = DataFormatter.createDateFormat(contact.date)
+        row.contactDuration.text = DataFormatter.createDurationFormat(contact.duration)
+        row.contactDistance.text = DataFormatter.createDistanceFormat(contact.distance)
+        row.contactLocation.text = DataFormatter.createLocationFormat(contact.latitude, contact.longitude)
         return view
     }
 }
