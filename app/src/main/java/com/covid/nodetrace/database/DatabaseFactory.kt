@@ -7,11 +7,11 @@ object DatabaseFactory {
     @get:Synchronized
     private var firebaseDao: FirebaseDao? = null
 
-    fun getFirebaseDatabase () : FirebaseDao? {
+    fun getFirebaseDatabase () : FirebaseDao {
         if (firebaseDao == null)
             return FirebaseDatabase()
         else {
-            return firebaseDao
+            return firebaseDao!!
         }
     }
 }

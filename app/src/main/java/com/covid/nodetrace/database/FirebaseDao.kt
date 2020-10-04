@@ -4,8 +4,8 @@ import android.content.Context
 import com.covid.nodetrace.Contact
 
 interface FirebaseDao {
-    suspend fun create(context : Context, contact: Contact)
-    suspend fun read(context : Context, contact: Contact)
-    suspend fun update(context : Context, contact: Contact)
-    suspend fun delete(context : Context, contact: Contact)
+    suspend fun create(contactID : String) : Boolean
+    suspend fun read(contactID: String) : Boolean
+    suspend fun update(contactID: String) : Boolean
+    suspend fun delete(contactID: String) : Boolean
 }

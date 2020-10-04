@@ -115,12 +115,7 @@ class ContactManager(context: Context, lifecycle: Lifecycle, viewModel: AppViewM
 
     fun createDatabase(activity: Activity) {
         this.launch(Dispatchers.IO) {
-            appDatabase = Room.databaseBuilder(
-                activity,
-                AppDatabase::class.java,
-                "contact-database"
-            ).build()
-
+            appDatabase = AppDatabase.getInstance(activity)
             val allContacts : List<Contact> = appDatabase.contactDao().getAll()
             allContacts.forEach { contact ->
                 println(
