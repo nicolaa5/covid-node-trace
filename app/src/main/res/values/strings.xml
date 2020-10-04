@@ -34,7 +34,6 @@
     <string name="contact_duration">""</string>
     <string name="contact_distance">""</string>
 
-    <string name="chosen_contact">""</string>
     <string name="history_sheet_title">Contacts</string>
     <string name="row_contact_date">"Date"</string>
     <string name="row_contact_duration">"Duration"</string>

@@ -15,10 +15,12 @@ import androidx.fragment.app.activityViewModels
 import com.covid.nodetrace.Contact
 import com.covid.nodetrace.ContactHistoryAdapter
 import com.covid.nodetrace.R
+import com.covid.nodetrace.database.DatabaseFactory
 import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import kotlinx.coroutines.Dispatchers
 
 
 /**
@@ -60,9 +62,6 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
 
         initializeBottomSheet()
         initializeMap(savedInstanceState)
-
-        val sharedPref = requireActivity().getPreferences(Context.MODE_PRIVATE)
-        val lastChosenContact : String? = sharedPref.getString(requireActivity().getString(R.string.chosen_contact), "")
 
         listenForContactUpdates()
     }
@@ -123,12 +122,6 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
             view.setSelected(true)
             val contact : Contact = contactHistoryAdapter.getItem(position)
             displayContactFromList(contact)
-
-            with (requireActivity().getPreferences(Context.MODE_PRIVATE).edit()) {
-                putString(requireActivity().resources.getString(R.string.chosen_contact), contact.ID)
-                apply()
-            }
-
         }
     }
 
