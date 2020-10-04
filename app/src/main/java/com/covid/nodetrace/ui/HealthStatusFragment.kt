@@ -79,6 +79,17 @@ class HealthStatusFragment : Fragment(), CoroutineScope {
     }
 
     fun postUpdatedHealthStatusToDatabase () {
+        this.launch(Dispatchers.IO) {
+            val appDatabase = AppDatabase.getInstance(requireContext())
+
+
+            val today = System.currentTimeMillis()
+            val fourteenDaysAgo = today - TimeUnit.DAYS.toMillis(14)
+            val contacts : List<Contact> = appDatabase.contactDao().getContactsWithinTimePeriod(fourteenDaysAgo, today)
+            val contactIDs : List<String> = contacts.map { contact -> contact.ID }
+
+            if (contacts.size == 0)
+                return@launch
 
             this.launch(Dispatchers.Default) {
                 var uploadedIDs : MutableList<String> = mutableListOf()
@@ -90,6 +101,7 @@ class HealthStatusFragment : Fragment(), CoroutineScope {
                 }
 
             }
+        }
     }
 
     fun checkButtonState (currentStatus : Int) {

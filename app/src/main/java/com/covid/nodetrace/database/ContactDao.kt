@@ -8,6 +8,9 @@ interface ContactDao {
     @Query("SELECT * FROM Contact")
     fun getAll(): List<Contact>
 
+    @Query("SELECT * FROM Contact WHERE Contact.date > (:fromDate) & Contact.date < (:untilDate)")
+    fun getContactsWithinTimePeriod(fromDate : Long, untilDate : Long): List<Contact>
+
     @Query("SELECT * FROM Contact WHERE ID IN (:ContactListPosition)")
     fun loadAllByPosition(ContactListPosition: IntArray): List<Contact>
 
