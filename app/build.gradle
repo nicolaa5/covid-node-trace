@@ -17,6 +17,14 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
+
+        // Read the API key from ./secure.properties into R.string.maps_api_key
+        def secureProps = new Properties()
+        if (file("../secure.properties").exists()) {
+            file("../secure.properties")?.withInputStream { secureProps.load(it) }
+        }
+        resValue "string", "maps_api_key", (secureProps.getProperty("MAPS_API_KEY") ?: "")
+        resValue "string", "nearby_api_key", (secureProps.getProperty("NEARBY_API_KEY") ?: "")
     }
 
     buildTypes {

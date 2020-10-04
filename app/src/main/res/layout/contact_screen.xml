@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
 
     <LinearLayout
@@ -12,16 +13,16 @@
         android:weightSum="16">
 
         <androidx.cardview.widget.CardView
+            android:id="@+id/contact_map_card"
             android:layout_gravity="center"
             android:layout_width="200dp"
             android:layout_height="200dp"
             app:cardCornerRadius="100dp">
 
-            <androidx.fragment.app.FragmentContainerView
+            <com.google.android.gms.maps.MapView
                 android:id="@+id/contact_map"
-                android:name="com.google.android.gms.maps.SupportMapFragment"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"/>
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent" />
 
         </androidx.cardview.widget.CardView>
 
@@ -41,16 +42,6 @@
                 android:gravity="center_horizontal"
                 android:text="@string/contact_date"
                 android:textSize="18sp" />
-
-            <TextView
-                android:id="@+id/contact_time"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center_horizontal"
-                android:text="@string/contact_time"
-                android:textSize="18sp" />
-
             <TextView
                 android:id="@+id/contact_duration"
                 android:layout_width="match_parent"
@@ -69,7 +60,7 @@
                 android:text="@string/contact_distance"
                 android:textSize="18sp" />
             </LinearLayout>
-        <include layout="@layout/contact_history_sheet" />
     </LinearLayout>
+    <include layout="@layout/contact_history_sheet" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

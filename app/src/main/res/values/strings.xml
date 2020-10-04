@@ -3,6 +3,8 @@
     <string name="screen_state">Screen State</string>
     <string name="action_settings">Settings</string>
 
+    <string name="communication_type_state">Communication State</string>
+
     <!-- Strings used for fragments for navigation -->
     <string name="welcome_fragment_label">Welcome Fragment</string>
     <string name="health_status_fragment_label">Health Status Fragment</string>
@@ -27,11 +29,13 @@
     <string name="update_health_status_button">Submit</string>
     <string name="health_status">""</string>
 
-    <string name="contact_date">"Date: " + %1$s</string>
-    <string name="contact_time">"Time: " + %1$s</string>
-    <string name="contact_duration">"Duration: " + %1$s</string>
-    <string name="contact_distance">"Distance: " + %1$s</string>
+    <string name="contact_date">""</string>
+    <string name="contact_time">""</string>
+    <string name="contact_duration">""</string>
+    <string name="contact_distance">""</string>
 
+    <string name="chosen_contact">""</string>
+    <string name="history_sheet_title">Contacts</string>
     <string name="row_contact_date">"Date"</string>
     <string name="row_contact_duration">"Duration"</string>
     <string name="row_contact_distance">"Distance"</string>
@@ -49,4 +53,10 @@
         Nodes will advertise a bluetooth ID, while a User scans for bluetooth IDs
     </string>
 
+    <string name="permission_rationale_positive">Ok</string>
+    <string name="permission_rationale_negative">Cancel</string>
+    <string name="fine_location_rationale_title">Location permission</string>
+    <string name="fine_location_rationale_text">The app needs your permission to be able to provide bluetooth communication</string>
+    <string name="storage_rationale_title">Storage permission</string>
+    <string name="storage_rationale_text">The app needs your permission to store data on the phone</string>
 </resources>
