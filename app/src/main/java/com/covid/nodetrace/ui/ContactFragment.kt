@@ -1,6 +1,5 @@
 package com.covid.nodetrace.ui
 
-import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -13,14 +12,12 @@ import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.covid.nodetrace.Contact
-import com.covid.nodetrace.ContactHistoryAdapter
 import com.covid.nodetrace.R
-import com.covid.nodetrace.database.DatabaseFactory
+import com.covid.nodetrace.util.DataFormatter
 import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import kotlinx.coroutines.Dispatchers
 
 
 /**

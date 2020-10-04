@@ -1,4 +1,4 @@
-package com.covid.nodetrace.database
+package com.covid.nodetrace.util
 
 /**
  * Implementation of singleton Room database found here:

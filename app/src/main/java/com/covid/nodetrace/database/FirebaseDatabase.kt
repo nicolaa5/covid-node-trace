@@ -1,9 +1,8 @@
 package com.covid.nodetrace.database
 
 import android.content.Context
-import android.net.ConnectivityManager
-import android.net.NetworkInfo
 import android.util.Log
+import com.covid.nodetrace.util.NetworkHelper
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore

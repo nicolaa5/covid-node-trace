@@ -1,6 +1,6 @@
-package com.covid.nodetrace.ui
+package com.covid.nodetrace.util
 
-import com.covid.nodetrace.TimeRange
+import com.covid.nodetrace.ui.TimeRange
 import java.math.RoundingMode
 import java.text.SimpleDateFormat
 import java.util.*

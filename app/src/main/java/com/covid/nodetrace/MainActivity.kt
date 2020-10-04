@@ -15,7 +15,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.navigation.findNavController
-import com.covid.nodetrace.database.NetworkHelper
+import com.covid.nodetrace.util.NetworkHelper
 import com.covid.nodetrace.permissions.Permissions
 import com.covid.nodetrace.permissions.Permissions.requiredPermissions
 import com.covid.nodetrace.ui.AppViewModel

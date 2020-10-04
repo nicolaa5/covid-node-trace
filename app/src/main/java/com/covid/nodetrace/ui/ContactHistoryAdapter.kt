@@ -1,4 +1,4 @@
-package com.covid.nodetrace
+package com.covid.nodetrace.ui
 
 import android.content.Context
 import android.view.LayoutInflater
@@ -6,7 +6,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.TextView
-import com.covid.nodetrace.ui.DataFormatter
+import com.covid.nodetrace.Contact
+import com.covid.nodetrace.R
+import com.covid.nodetrace.util.DataFormatter
 
 
 class ContactHistoryAdapter(context: Context) : BaseAdapter() {
