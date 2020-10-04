@@ -157,7 +157,7 @@ class ContactManager(context: Context, lifecycle: Lifecycle, viewModel: AppViewM
     suspend fun updateContactRiskLevel (riskContactIDs : List<String>) {
         withContext(Dispatchers.IO){
             riskContactIDs.forEach{ contactID ->
-                appDatabase.contactDao().updateHealthStatus(contactID, HealthStatus.SICK)
+                appDatabase.contactDao().updateHealthStatus(contactID, HealthStatus.SICK.toString())
             }
         }
     }

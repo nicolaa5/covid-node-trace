@@ -1,5 +1,6 @@
 package com.covid.nodetrace.ui
 
+import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -12,9 +13,13 @@ import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.covid.nodetrace.Contact
+import com.covid.nodetrace.HealthStatus
 import com.covid.nodetrace.R
 import com.covid.nodetrace.util.DataFormatter
-import com.google.android.gms.maps.*
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.MapView
+import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -34,9 +39,10 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
     private lateinit var sheetBehavior : BottomSheetBehavior<NestedScrollView>
     private var mGoogleMap: GoogleMap? = null
     private lateinit var mMap: MapView
-    private lateinit var latestContactDate : TextView
-    private lateinit var latestContactDuration : TextView
-    private lateinit var latestContactDistance : TextView
+    private lateinit var contactHealthStatus : TextView
+    private lateinit var contactDate : TextView
+    private lateinit var contactDuration : TextView
+    private lateinit var contactDistance : TextView
     private lateinit var mapCardView : CardView
     private var mContacts : List<Contact> = emptyList()
 
@@ -52,9 +58,10 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         contactHistoryListView = view.findViewById(R.id.contact_history_list_view) as ListView
-        latestContactDate = view.findViewById(R.id.contact_date) as TextView
-        latestContactDuration = view.findViewById(R.id.contact_duration) as TextView
-        latestContactDistance= view.findViewById(R.id.contact_distance) as TextView
+        contactHealthStatus = view.findViewById(R.id.contact_health_status) as TextView
+        contactDate = view.findViewById(R.id.contact_date) as TextView
+        contactDuration = view.findViewById(R.id.contact_duration) as TextView
+        contactDistance= view.findViewById(R.id.contact_distance) as TextView
         mapCardView = view.findViewById(R.id.contact_map_card) as CardView
 
         initializeBottomSheet()
@@ -117,12 +124,13 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
 
         contactHistoryListView.setOnItemClickListener { adapterView: AdapterView<*>, view: View, position: Int, id: Long ->
             view.setSelected(true)
+            view.setBackgroundColor(Color.GRAY)
             val contact : Contact = contactHistoryAdapter.getItem(position)
             displayContactFromList(contact)
         }
     }
 
-    private fun initializeMap (savedInstanceState : Bundle?) {
+    private fun initializeMap(savedInstanceState: Bundle?) {
         mMap = view?.findViewById(R.id.contact_map) as MapView
         mMap?.onCreate(savedInstanceState)
         mMap?.getMapAsync(this)
@@ -140,10 +148,8 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
         )
     }
 
-    private fun displayContactFromList(contact : Contact) {
-        latestContactDate.text = "Date: " + DataFormatter.createDateFormat(contact.date)
-        latestContactDuration.text = "Duration: " + DataFormatter.createDurationFormat(contact.duration)
-        latestContactDistance.text = "Distance: " + DataFormatter.createDistanceFormat(contact.distance)
+    private fun displayContactFromList(contact: Contact) {
+        displayContactData(contact)
 
         if (isLocationValid(contact.latitude, contact.longitude)) {
             moveCamera(contact.latitude, contact.longitude)
@@ -155,14 +161,32 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
             return
 
         val latestContact : Contact = getLatestContact(contacts)
-        latestContactDate.text = "Date: " + DataFormatter.createDateFormat(latestContact.date)
-        latestContactDuration.text = "Duration: " + DataFormatter.createDurationFormat(latestContact.duration)
-        latestContactDistance.text = "Distance: " + DataFormatter.createDistanceFormat(latestContact.distance)
+        displayContactData(latestContact)
 
-        getLatestContactWithValidLocation(contacts) {latestValidLocationContact ->
+        getLatestContactWithValidLocation(contacts) { latestValidLocationContact ->
             mapCardView.setVisibility(View.VISIBLE)
             moveCamera(latestValidLocationContact?.latitude, latestValidLocationContact?.longitude)
         }
+    }
+
+    private fun displayContactData(contact : Contact) {
+        var textColor = Color.GRAY
+        val status : HealthStatus = HealthStatus.valueOf(contact.healthStatus)
+
+        when (status) {
+            HealthStatus.HEALTHY -> {
+                textColor = Color.rgb(79, 165, 85)
+            }
+            HealthStatus.SICK -> {
+                textColor = Color.rgb(235, 64, 52)
+            }
+        }
+
+        contactHealthStatus.setTextColor(textColor)
+        contactHealthStatus.text = DataFormatter.createHealthStatusFormat(status)
+        contactDate.text =DataFormatter.createDateFormat(contact.date)
+        contactDuration.text = DataFormatter.createDurationFormat(contact.duration)
+        contactDistance.text = DataFormatter.createDistanceFormat(contact.distance)
     }
 
     /**
@@ -181,7 +205,7 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
-    private fun addMarkers (contacts: List<Contact>) {
+    private fun addMarkers(contacts: List<Contact>) {
         val validLocationContacts = filterValidLocations(contacts)
         for (contact in validLocationContacts) {
             val location = LatLng(contact.latitude, contact.longitude)
@@ -193,7 +217,7 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
-    private fun moveCamera(latitude : Double, longitude : Double) {
+    private fun moveCamera(latitude: Double, longitude: Double) {
         if (!isLocationValid(latitude, longitude))
             return
 
@@ -213,7 +237,10 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
         return latestContact
     }
 
-    private fun getLatestContactWithValidLocation(contacts: List<Contact>, latestValidLocationContact : (Contact) -> Unit) {
+    private fun getLatestContactWithValidLocation(
+        contacts: List<Contact>,
+        latestValidLocationContact: (Contact) -> Unit
+    ) {
         var latestDate : Long = Long.MIN_VALUE
         var latestContact : Contact? = null
         contacts.forEach{ contact ->
@@ -226,11 +253,11 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
             latestValidLocationContact.invoke(latestContact!!)
     }
 
-    private fun isLocationValid (latitude : Double, longitude : Double) : Boolean {
+    private fun isLocationValid(latitude: Double, longitude: Double) : Boolean {
         return latitude != 0.0 && longitude != 0.0
     }
 
-    private fun filterValidLocations (contacts: List<Contact>) : List<Contact> {
+    private fun filterValidLocations(contacts: List<Contact>) : List<Contact> {
         return contacts.filter { contact -> contact.latitude != 0.0 && contact.longitude != 0.0 }
     }
 

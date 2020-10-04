@@ -34,5 +34,5 @@ interface ContactDao {
     fun update(newID : String, oldID : String)
 
     @Query("UPDATE Contact SET health_status = :newHealthStatus WHERE ID = :contactID")
-    fun updateHealthStatus(contactID : String, newHealthStatus : HealthStatus)
+    fun updateHealthStatus(contactID : String, newHealthStatus : String)
 }

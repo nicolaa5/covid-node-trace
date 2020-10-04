@@ -19,5 +19,5 @@ open class Contact (
     @ColumnInfo(name = "longitude") open var longitude : Double = 0.0,
     @ColumnInfo(name = "duration") open var duration : Long = -1,
     @ColumnInfo(name = "distance") open var distance : Double = -1.0,
-    @ColumnInfo(name = "health_status") open var healthStatus : HealthStatus = HealthStatus.HEALTHY) {
+    @ColumnInfo(name = "health_status") open var healthStatus : String = HealthStatus.HEALTHY.toString()) {
 }
