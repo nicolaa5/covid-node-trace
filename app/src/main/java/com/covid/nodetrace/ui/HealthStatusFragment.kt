@@ -70,22 +70,11 @@ class HealthStatusFragment : Fragment(), CoroutineScope {
                 apply()
             }
         }
-
     }
 
     override fun onDestroy() {
         super.onDestroy()
         coroutineContext[Job]!!.cancel()
-    }
-
-    fun getContactIDsFromDatabase () {
-        this.launch(Dispatchers.Default) {
-            val contactIDsRetrieved = DatabaseFactory.getFirebaseDatabase().read(requireContext())
-
-            this.launch(Dispatchers.IO) {
-                val appDatabase = AppDatabase.getInstance(requireContext())
-            }
-        }
     }
 
     fun postUpdatedHealthStatusToDatabase () {

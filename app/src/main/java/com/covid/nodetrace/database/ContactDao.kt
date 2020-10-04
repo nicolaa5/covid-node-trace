@@ -2,6 +2,7 @@ package com.covid.nodetrace.database
 
 import androidx.room.*
 import com.covid.nodetrace.Contact
+import com.covid.nodetrace.HealthStatus
 
 @Dao
 interface ContactDao {
@@ -31,4 +32,7 @@ interface ContactDao {
 
     @Query("UPDATE Contact SET ID = :newID WHERE ID = :oldID")
     fun update(newID : String, oldID : String)
+
+    @Query("UPDATE Contact SET health_status = :newHealthStatus WHERE ID = :contactID")
+    fun updateHealthStatus(contactID : String, newHealthStatus : HealthStatus)
 }
