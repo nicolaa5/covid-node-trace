@@ -13,9 +13,9 @@ import android.view.Menu
 import android.view.MenuItem
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.navigation.findNavController
+import com.covid.nodetrace.database.NetworkHelper
 import com.covid.nodetrace.permissions.Permissions
 import com.covid.nodetrace.permissions.Permissions.requiredPermissions
 import com.covid.nodetrace.ui.AppViewModel
@@ -93,6 +93,12 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         model.communicationType.observe(this, Observer<ContactService.CommunicationType> { communicationType ->
             mService?.setCommunicationType(communicationType)
         })
+
+        val isConnected = NetworkHelper.isConnectedToNetwork(this)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            NetworkHelper.registerNetworkCallback(this)
+        }
     }
 
     override fun onStart() {
