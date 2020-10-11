@@ -9,6 +9,9 @@ import java.util.concurrent.TimeUnit
 
 object DataFormatter {
 
+    /**
+     * Formats the {@see HealthStatus} enum into a descriptive string
+     */
     fun createHealthStatusFormat(healthStatus: HealthStatus): String {
         when(healthStatus) {
             HealthStatus.HEALTHY -> {
@@ -19,6 +22,10 @@ object DataFormatter {
             }
         }
     }
+
+    /**
+     * Formats the duration in milliseconds into a string with format: [00:00:00]
+     */
     fun createDurationFormat(durationInMilliseconds : Long) : String {
         val seconds : Long = TimeUnit.MILLISECONDS.toSeconds(durationInMilliseconds) % 60
         val minutes : Long = TimeUnit.MILLISECONDS.toMinutes(durationInMilliseconds) % 60
@@ -52,18 +59,28 @@ object DataFormatter {
         }
     }
 
+    /**
+     * Converts distance in meters to a string and returns nothing if distance was not recorded
+     */
     fun createDistanceFormat(distanceInMeters : Double) : String {
         if (distanceInMeters == -1.0)
-            return "0 - 10 m"
+            return "-"
         else return distanceInMeters.toString() + " m"
     }
 
+    /**
+     * Create a string with longitude and latitude of the location
+     */
     fun createLocationFormat (latitude : Double, longitude : Double) : String {
         if (latitude == 0.0 || longitude == 0.0)
             return "- , -"
         else return latitude.toBigDecimal().setScale(2, RoundingMode.UP).toString() +", " +
                 longitude.toBigDecimal().setScale(2, RoundingMode.UP).toString()
     }
+
+    /**
+     * Creates a short date notation [dd-MMM-yy] from a Unix timestamp
+     */
     fun createShortDateFormat(unixTimeStamp: Long) : String? {
         try {
             val date = SimpleDateFormat("dd-MMM-yy")
@@ -74,6 +91,9 @@ object DataFormatter {
         }
     }
 
+    /**
+     * Creates a date notation [dd-MMM-yy hh:mm] from a Unix timestamp
+     */
     fun createDateFormat(unixTimeStamp: Long) : String? {
         try {
             val date = SimpleDateFormat("dd-MMM-yy hh:mm")
