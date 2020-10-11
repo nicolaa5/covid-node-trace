@@ -77,6 +77,10 @@ class HealthStatusFragment : Fragment(), CoroutineScope {
         coroutineContext[Job]!!.cancel()
     }
 
+    /**
+     * This function POSTs all contact IDs from the last fourteen days to the remote firebase database
+     * @Note: Only the Contact IDs are send, not private data such as location.
+     */
     fun postUpdatedHealthStatusToDatabase () {
         this.launch(Dispatchers.IO) {
             val appDatabase = AppDatabase.getInstance(requireContext())
@@ -102,6 +106,9 @@ class HealthStatusFragment : Fragment(), CoroutineScope {
         }
     }
 
+    /**
+     * Checks the state of the health status UI component
+     */
     fun checkButtonState (currentStatus : Int) {
         if (currentStatus == (healthStatus?.getValue() ?: 0)) {
             updateHealthStatusButton.setEnabled(false)

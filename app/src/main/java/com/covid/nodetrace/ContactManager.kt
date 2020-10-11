@@ -132,8 +132,11 @@ class ContactManager(context: Context, lifecycle: Lifecycle, viewModel: AppViewM
     }
 
 
+    /**
+     * Retrieves all the contact IDs of the last 14 days and then compares
+     * them to contact IDs stored in the local database
+     */
     fun checkForRiskContacts () {
-
         this.launch(Dispatchers.Default) {
             if (mContext == null)
                 return@launch
@@ -144,6 +147,10 @@ class ContactManager(context: Context, lifecycle: Lifecycle, viewModel: AppViewM
         }
     }
 
+    /**
+     * Retrieves all contacts from the local database and compares them with the IDs
+     * retrieved from the remote database
+     */
     suspend fun compareDatabaseIDsToLocalIDs (databaseContactIDs : List<String>) {
         withContext(Dispatchers.IO) {
             val localContacts : List<Contact> = appDatabase.contactDao().getAll()
@@ -154,6 +161,9 @@ class ContactManager(context: Context, lifecycle: Lifecycle, viewModel: AppViewM
         }
     }
 
+    /**
+     * Updates the Risk level in existing contact entries in the local database
+     */
     suspend fun updateContactRiskLevel (riskContactIDs : List<String>) {
         withContext(Dispatchers.IO){
             riskContactIDs.forEach{ contactID ->
@@ -162,6 +172,10 @@ class ContactManager(context: Context, lifecycle: Lifecycle, viewModel: AppViewM
         }
     }
 
+    /**
+     * Creates a new Contact based on a 128-bit UUID. The moment the function is
+     * called it logs the current Unix date and attempts to get the location (if permission is given)
+     */
     fun createNewContact(ID: String) : Contact {
         val date = getCurrentUnixDate()
         val location : Location? = getCurrentLocation()
@@ -173,6 +187,9 @@ class ContactManager(context: Context, lifecycle: Lifecycle, viewModel: AppViewM
         }
     }
 
+    /**
+     * Updates the distance the contact was at if it's less than the previous known contact distance
+     */
     fun updateContactDistance(ID: String, distance: Double) {
         for (contact in contacts) {
             if (contact.ID == ID) {
@@ -182,6 +199,10 @@ class ContactManager(context: Context, lifecycle: Lifecycle, viewModel: AppViewM
         }
     }
 
+    /**
+     * Updates the contact's duration. The contact's duration will usually be updated when the device is out of range
+     * or when the BLE signal is lost.
+     */
     fun updateContactDuration(ID: String, contactEnd: Long) : Contact? {
         for (contact in contacts) {
             if (contact.ID == ID) {
@@ -192,6 +213,9 @@ class ContactManager(context: Context, lifecycle: Lifecycle, viewModel: AppViewM
         return null
     }
 
+    /**
+     * Insert a contact into the local database
+     */
     fun insertContact(contact: Contact) {
         this.launch(Dispatchers.IO) {
             appDatabase.contactDao().insert(contact)
@@ -208,6 +232,10 @@ class ContactManager(context: Context, lifecycle: Lifecycle, viewModel: AppViewM
         mContext = null
     }
 
+    /**
+     * Listen for broadcast messages sent from the Android Service that's running in the background listening
+     * for BLE messages. The filter listens for NODE lost & found messages, as well as distance updates
+     */
     private fun makeBroadcastFilter(): IntentFilter {
         val intentFilter = IntentFilter()
         intentFilter.addAction(ContactService.NODE_FOUND)
@@ -216,10 +244,18 @@ class ContactManager(context: Context, lifecycle: Lifecycle, viewModel: AppViewM
         return intentFilter
     }
 
+    /**
+     * Gets the current time in milliseconds since 1970.
+     * This format is used because a numerical date is easier to compare and is not influenced by timezones.
+     * It can be converted to local time to make it easy to interpret.
+     */
     fun getCurrentUnixDate() : Long {
         return System.currentTimeMillis()
     }
 
+    /**
+     * Gets the user's current location if permission has been granted
+     */
     fun getCurrentLocation() : Location? {
         //If context is not available then stop execution
         if (mContext == null)

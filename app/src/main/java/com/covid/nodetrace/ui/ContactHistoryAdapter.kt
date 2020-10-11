@@ -25,11 +25,17 @@ class ContactHistoryAdapter(context: Context) : BaseAdapter() {
         mInflator = LayoutInflater.from(context)
     }
 
+    /**
+     * Update the UI with contacts supplied in the list
+     */
     fun updateValues(contacts: List<Contact>) {
         mContacts = contacts
         rerenderList()
     }
 
+    /**
+     * Gets the Contact item based on it's position in the list
+     */
     override fun getItem(position: Int): Contact {
         return mContacts.get(position)
     }
@@ -51,7 +57,10 @@ class ContactHistoryAdapter(context: Context) : BaseAdapter() {
     }
 
 
-
+    /**
+     * Called by the Adapter when updates to the list occur
+     * Data is converted in the right format before displaying it on the UI
+     */
     override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View? {
         val view: View?
         val row: ContactRow
@@ -84,8 +93,9 @@ public enum class TimeRange {
 }
 
 
-
-
+/**
+ * Specifies every row in the list that shows the contact database entries
+ */
 private class ContactRow(row: View?) {
     public val contactHealthStatus: TextView
     public val contactDate: TextView

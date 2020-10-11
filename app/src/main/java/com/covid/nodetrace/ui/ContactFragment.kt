@@ -112,6 +112,9 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
         mMap.onLowMemory()
     }
 
+    /**
+     * Sets listeners for UI changes and initializes components
+     */
     private fun initializeBottomSheet() {
         contactHistoryAdapter = ContactHistoryAdapter(requireActivity())
         contactHistoryListView.adapter = contactHistoryAdapter
@@ -142,6 +145,9 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
+    /**
+     * Initializes the map that is shown
+     */
     private fun initializeMap(savedInstanceState: Bundle?) {
         mMap = view?.findViewById(R.id.contact_map) as MapView
         mMap?.onCreate(savedInstanceState)
@@ -149,6 +155,9 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
         mapCardView?.setVisibility(View.INVISIBLE)
     }
 
+    /**
+     * Observers @see AppViewModel for new changes regarding the list of registered contacts
+     */
     private fun listenForContactUpdates() {
         model.contacts.observe(
             requireActivity(),
@@ -160,6 +169,10 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
         )
     }
 
+    /**
+     * Displays a contact on the UI and moves the camera location of the map
+     * if a valid location is found for that contact
+     */
     private fun displayContactFromList(contact: Contact) {
         displayContactData(contact)
 
@@ -168,6 +181,9 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
+    /**
+     * Picks the latest contact from the local database to be displayed in the app UI
+     */
     private fun displayLatestContactFromDatabase(contacts: List<Contact>) {
         if (isContactListEmpty())
             return
@@ -181,6 +197,9 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
+    /**
+     * Sets all the UI component data from the supplied contact
+     */
     private fun displayContactData(contact : Contact) {
         healthStatusTitle.setVisibility(View.VISIBLE)
         dateTitle.setVisibility(View.VISIBLE)
@@ -222,6 +241,9 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
+    /**
+     * Adds markers on the map for every supplied contact
+     */
     private fun addMarkers(contacts: List<Contact>) {
         val validLocationContacts = filterValidLocations(contacts)
         for (contact in validLocationContacts) {
@@ -234,6 +256,9 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
+    /**
+     * Moves the camera of the map if the location is valid
+     */
     private fun moveCamera(latitude: Double, longitude: Double) {
         if (!isLocationValid(latitude, longitude))
             return
@@ -242,6 +267,10 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
         mGoogleMap?.moveCamera(CameraUpdateFactory.newLatLng(location))
     }
 
+    /**
+     * Gets the latest known contact from a list of contact
+     * The latest known contact is the one with the most recent recorded date
+     */
     private fun getLatestContact(contacts: List<Contact>) : Contact {
         var latestDate : Long = Long.MIN_VALUE
         var latestContact : Contact = contacts.first()
@@ -254,6 +283,9 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
         return latestContact
     }
 
+    /**
+     * Gets all contacts that have valid latitude and longitude
+     */
     private fun getLatestContactWithValidLocation(
         contacts: List<Contact>,
         latestValidLocationContact: (Contact) -> Unit
@@ -270,14 +302,23 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
             latestValidLocationContact.invoke(latestContact!!)
     }
 
+    /**
+     * Checks if the latitude and longitude are valid
+     */
     private fun isLocationValid(latitude: Double, longitude: Double) : Boolean {
         return latitude != 0.0 && longitude != 0.0
     }
 
+    /**
+     * Filters all locations that are valid
+     */
     private fun filterValidLocations(contacts: List<Contact>) : List<Contact> {
         return contacts.filter { contact -> contact.latitude != 0.0 && contact.longitude != 0.0 }
     }
 
+    /**
+     * @return if contact list is empty or not
+     */
     private fun isContactListEmpty() : Boolean {
         return mContacts.size == 0
     }

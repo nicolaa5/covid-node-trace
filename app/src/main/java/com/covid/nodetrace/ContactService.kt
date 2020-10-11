@@ -25,6 +25,12 @@ public class ContactService() : Service() {
     var mActivityIsChangingConfiguration : Boolean = false
     var communicationType = CommunicationType.NONE
 
+    /**
+     * The communication type defines how the communication between devices with the app is done
+     * There's currently two types in the app:
+     * - NODE: Only sends IDs to devices with the app in the area
+     * - USER: Only scans for contact IDs in the area
+     */
     enum class CommunicationType {
         SCAN,
         ADVERTISE,
@@ -50,6 +56,9 @@ public class ContactService() : Service() {
 
     inner class LocalBinder : Binder() {
 
+        /**
+         * Changes the communication type
+         */
         fun setCommunicationType(type: CommunicationType) {
             updateCommunicationType(type)
         }
@@ -78,6 +87,9 @@ public class ContactService() : Service() {
         return LocalBinder()
     }
 
+    /**
+     * Called when the connected between the activity and the service is established
+     */
     override fun onBind(intent: Intent?): IBinder? {
         mBound = true
         return getBinder()
@@ -89,9 +101,6 @@ public class ContactService() : Service() {
      *
      * More information about foreground services can be found here:
      * https://developer.android.com/guide/components/foreground-services
-     *
-     * If the system kills the service when running low on memory 'START_STICKY' tells the
-     * system to restart the service when enough resources are available again
      */
     fun createForegroundService(activity: Activity, communicationType: CommunicationType) {
         createNotificationChannel()
@@ -137,6 +146,12 @@ public class ContactService() : Service() {
         startForeground(1, notification)
     }
 
+    /**
+     * Called when the service is started
+     *
+     * If the system kills the service when running low on memory 'START_STICKY' tells the
+     * system to restart the service when enough resources are available again
+     */
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         return START_STICKY
     }
@@ -234,6 +249,10 @@ public class ContactService() : Service() {
         Nearby.getMessagesClient(this).subscribe(messageListener!!)
     }
 
+    /**
+     * Updates the communication by first stopping all previous settings and then
+     * calling calling advertising/scanning methods based on the chosen communication type
+     */
     fun updateCommunicationType (newCommunicationType: CommunicationType) {
         if (newCommunicationType == communicationType)
             return
@@ -257,6 +276,9 @@ public class ContactService() : Service() {
         }
     }
 
+    /**
+     * Stops both advertising IDs and scanning for IDs in the area by unsubscribing/unpublishing
+     */
     fun stopAdvertisingAndScanning() {
         if (uniqueMessage != null)
             Nearby.getMessagesClient(this)?.unpublish(uniqueMessage!!)
