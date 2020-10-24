@@ -9,8 +9,6 @@ import android.util.Log
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import com.google.android.gms.common.api.internal.ConnectionCallbacks
-import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.messages.*
 import java.util.*
 
@@ -182,10 +180,10 @@ public class ContactService() : Service() {
         super.onDestroy()
 
         if (uniqueMessage != null)
-            Nearby.getMessagesClient(this)?.unpublish(uniqueMessage!!)
+            Bluetooth.getBluetoothAccess(this)?.unpublish(uniqueMessage!!)
 
         if (messageListener != null)
-            Nearby.getMessagesClient(this)?.unsubscribe(messageListener!!)
+            Bluetooth.getBluetoothAccess(this)?.unsubscribe(messageListener!!)
     }
 
     /**
@@ -196,7 +194,7 @@ public class ContactService() : Service() {
         val uniqueID = UUID.randomUUID().toString()
         uniqueMessage = Message(uniqueID.toByteArray())
 
-        Nearby.getMessagesClient(this).publish(uniqueMessage!!)
+        Bluetooth.getBluetoothAccess(this)?.publish(uniqueMessage!!)
     }
 
     /**
@@ -246,7 +244,7 @@ public class ContactService() : Service() {
             }
         }
 
-        Nearby.getMessagesClient(this).subscribe(messageListener!!)
+        Bluetooth.getBluetoothAccess(this)?.subscribe(messageListener!!)
     }
 
     /**
@@ -281,10 +279,10 @@ public class ContactService() : Service() {
      */
     fun stopAdvertisingAndScanning() {
         if (uniqueMessage != null)
-            Nearby.getMessagesClient(this)?.unpublish(uniqueMessage!!)
+            Bluetooth.getBluetoothAccess(this)?.unpublish(uniqueMessage!!)
 
         if (messageListener != null)
-            Nearby.getMessagesClient(this)?.unsubscribe(messageListener!!)
+            Bluetooth.getBluetoothAccess(this)?.unsubscribe(messageListener!!)
     }
 
 
