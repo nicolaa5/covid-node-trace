@@ -15,6 +15,8 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.navigation.findNavController
+import com.covid.nodetrace.permissions.PermissionHelper
+import com.covid.nodetrace.permissions.PermissionRationale
 import com.covid.nodetrace.util.NetworkHelper
 import com.covid.nodetrace.permissions.Permissions
 import com.covid.nodetrace.permissions.Permissions.requiredPermissions
@@ -120,9 +122,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         super.onStart()
 
         if (!Permissions.hasPermissions(this, requiredPermissions)) {
-            Permissions.requestPermission(this, requiredPermissions) {
-
-            }
+            val permissionRationale : PermissionRationale = PermissionRationale()
+            permissionRationale.showRationale(this, PermissionHelper.Companion.PERMISSION_REQUEST_CODE)
         }
 
         //Load screen that was open the previous time the app was closed
