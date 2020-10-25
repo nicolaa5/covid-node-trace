@@ -3,10 +3,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/welcome_menu"
-        android:title="@string/welcome_menu"
-        app:showAsAction="never"/>
-    <item
         android:id="@+id/health_status_menu"
         android:title="@string/health_status_menu"
         app:showAsAction="never"/>

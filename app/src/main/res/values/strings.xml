@@ -40,7 +40,7 @@
     <string name="duration_title">"Duration"</string>
     <string name="distance_title">"Distance"</string>
 
-    <string name="history_sheet_title">Contacts</string>
+    <string name="history_sheet_title">Node Contacts</string>
     <string name="row_contact_health_status">"Status"</string>
     <string name="row_contact_date">"Date"</string>
     <string name="row_contact_duration">"Duration"</string>

@@ -151,9 +151,6 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         when (item.itemId) {
-            R.id.welcome_menu -> {
-                showScreen(Screens.WELCOME)
-            }
             R.id.health_status_menu -> {
                 showScreen(Screens.HEALTH_STATUS)
             }
