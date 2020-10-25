@@ -30,8 +30,6 @@ class WelcomeFragment : Fragment() {
         val button = view.findViewById<Button>(R.id.welcome_screen_button)
 
         button.setOnClickListener {
-            val permissionRationale : PermissionRationale = PermissionRationale()
-            permissionRationale.showRationale(requireActivity(),PermissionHelper.Companion.PERMISSION_REQUEST_CODE)
             findNavController().navigate(R.id.health_status_fragment)
         }
     }
