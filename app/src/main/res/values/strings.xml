@@ -52,12 +52,13 @@
         This application does not share your private data with any users or 3rd parties.
         The data is kept encrypted on your device only
     </string>
-    <string name="type_title">Type</string>
+    <string name="type_title">Mode</string>
     <string name="node_title">Node</string>
     <string name="user_title">User</string>
     <string name="type_explanation">
         Nodes will advertise a bluetooth ID, while a User scans for bluetooth IDs
     </string>
+    <string name="dev_mode">Development mode</string>
 
     <string name="permission_rationale_positive">Grant Permission</string>
     <string name="permission_rationale_negative">Cancel</string>

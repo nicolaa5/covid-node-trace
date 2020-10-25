@@ -47,59 +47,68 @@
                 android:textAlignment="center"
                 android:textSize="14sp"/>
 
-            <TextView
-                android:id="@+id/type_title"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="10dp"
-                android:text="@string/type_title"
-                android:textAlignment="center"
-                android:textSize="30sp"
-                android:textStyle="bold" />
-
 
             <LinearLayout
+                android:id="@+id/dev_section"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
+                android:orientation="vertical"
                 android:gravity="center">
+
                 <TextView
-                    android:id="@+id/node_title"
-                    android:layout_width="wrap_content"
+                    android:id="@+id/type_title"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:padding="10dp"
-                    android:text="@string/node_title"
+                    android:text="@string/type_title"
                     android:textAlignment="center"
-                    android:textSize="14sp" />
+                    android:textSize="30sp"
+                    android:textStyle="bold" />
 
-                <Switch
-                    android:id="@+id/type_switch"
-                    android:layout_width="wrap_content"
+
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:layout_margin="20dp"
-                    android:textColor="@color/white"/>
+                    android:orientation="horizontal"
+                    android:gravity="center">
+                    <TextView
+                        android:id="@+id/node_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="10dp"
+                        android:text="@string/node_title"
+                        android:textAlignment="center"
+                        android:textSize="14sp" />
+
+                    <Switch
+                        android:id="@+id/type_switch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_margin="20dp"
+                        android:textColor="@color/white"/>
+
+                    <TextView
+                        android:id="@+id/user_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="10dp"
+                        android:text="@string/user_title"
+                        android:textAlignment="center"
+                        android:textSize="14sp"/>
+                </LinearLayout>
 
                 <TextView
-                    android:id="@+id/user_title"
-                    android:layout_width="wrap_content"
+                    android:id="@+id/type_explanation"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="10dp"
-                    android:text="@string/user_title"
+                    android:padding="20dp"
+                    android:layout_marginStart="30dp"
+                    android:layout_marginEnd="30dp"
+                    android:text="@string/type_explanation"
                     android:textAlignment="center"
                     android:textSize="14sp"/>
             </LinearLayout>
-
-            <TextView
-                android:id="@+id/type_explanation"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="20dp"
-                android:layout_marginStart="30dp"
-                android:layout_marginEnd="30dp"
-                android:text="@string/type_explanation"
-                android:textAlignment="center"
-                android:textSize="14sp"/>
         </LinearLayout>
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
