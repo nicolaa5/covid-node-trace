@@ -12,25 +12,32 @@ import android.os.SystemClock
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.covid.nodetrace.bluetooth.BleScanner
 import com.covid.nodetrace.bluetooth.OnAdvertisementFound
 import com.covid.nodetrace.bluetooth.ScanActive
-import com.squareup.okhttp.Dispatcher
 import com.trace.api.data.BleAdvertiser
 import kotlinx.coroutines.*
-import kotlinx.coroutines.Dispatchers.Main
 import no.nordicsemi.android.support.v18.scanner.ScanResult
 import java.util.*
-import java.util.concurrent.TimeUnit
 import kotlin.coroutines.CoroutineContext
+import kotlin.experimental.and
 
 
 public class ContactService() : Service(), CoroutineScope {
     private val TAG = "ContactService"
     val CHANNEL_ID = "ForegroundServiceChannel"
 
-    // Consider the device out of range if no advertisements are found for 8 seconds
-    val CONTACT_OUT_OF_RANGE_TIMEOUT : Int = 8
+    companion object {
+        // Consider the device out of range if no advertisements are found for 8 seconds
+        val CONTACT_OUT_OF_RANGE_TIMEOUT : Int = 8
+
+        public final val NODE_IDENTIFIER = 0xFFFF
+
+        val NODE_FOUND = "com.covid.nodetrace.ContactService.NODE_FOUND"
+        val NODE_LOST = "com.covid.nodetrace.ContactService.NODE_LOST"
+        val DISTANCE_UPDATED = "com.covid.nodetrace.ContactService.DISTANCE_UPDATED"
+    }
 
     var mService : ContactService.LocalBinder? = null
 
@@ -56,11 +63,6 @@ public class ContactService() : Service(), CoroutineScope {
         ADVERTISE,
         SCAN_AND_ADVERTISE,
         NONE
-    }
-    companion object {
-        val NODE_FOUND = "com.covid.nodetrace.ContactService.NODE_FOUND"
-        val NODE_LOST = "com.covid.nodetrace.ContactService.NODE_LOST"
-        val DISTANCE_UPDATED = "com.covid.nodetrace.ContactService.DISTANCE_UPDATED"
     }
 
     inner class LocalBinder : Binder() {
@@ -204,8 +206,10 @@ public class ContactService() : Service(), CoroutineScope {
 
         bleAdvertiser = BleAdvertiser()
 
+        val randomUUID = UUID.randomUUID().toString().toByteArray().copyOfRange(0, 16)
+
         val advertisement = AdvertiseData.Builder()
-            .addManufacturerData(0xFFFF, "NODE".toByteArray())
+            .addManufacturerData(NODE_IDENTIFIER, randomUUID)
             .setIncludeDeviceName(true)
             .build()
 
@@ -239,21 +243,36 @@ public class ContactService() : Service(), CoroutineScope {
         backgroundScanner?.scanLeDevice(object : OnAdvertisementFound {
             override fun onAdvertisementFound(result: ScanResult) {
                 val device = result.device
-                val data = result.scanRecord?.getManufacturerSpecificData(0xFFFF)
+                val data = result.scanRecord?.getManufacturerSpecificData(NODE_IDENTIFIER)
 
                 val newDeviceFound = hasNewDeviceBeenFound(result)
                 foundDevices.set(result.device.address, result)
 
                 if (newDeviceFound) {
-                    Toast.makeText(applicationContext,"Found device:  ${data?.asUByteArray()}", Toast.LENGTH_LONG).show()
+                    val nodeID = result.scanRecord?.getManufacturerSpecificData(NODE_IDENTIFIER)?.let {
+                        byteArrayToHexString(it)
+                    }
+                    val broadcast: Intent = Intent(ContactService.NODE_FOUND)
+                        .putExtra("FOUND_ID", nodeID)
+
+                    LocalBroadcastManager.getInstance(baseContext).sendBroadcast(broadcast)
+
+                    Toast.makeText(
+                        applicationContext,
+                        "Found device:  ${nodeID}",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             }
         })
     }
 
     private fun hasNewDeviceBeenFound(result: ScanResult) : Boolean  {
-        for (device in foundDevices) {
-            if (device.key == result.device.address) {
+
+        val iterator = foundDevices.iterator()
+        while(iterator.hasNext()){
+            val item = iterator.next()
+            if(item.key == result.device.address){
                 return false
             }
         }
@@ -267,9 +286,18 @@ public class ContactService() : Service(), CoroutineScope {
             val millisecondDifference =  (currentTime - storedTime).toLong()
 
             if (millisecondDifference > CONTACT_OUT_OF_RANGE_TIMEOUT) {
-                this.launch(Dispatchers.Main) {
-                    Toast.makeText(applicationContext,"Lost device:  ${device.key}", Toast.LENGTH_LONG).show()
+                val nodeID = device.value.scanRecord?.getManufacturerSpecificData( NODE_IDENTIFIER)?.let {
+                    byteArrayToHexString( it )
                 }
+                this.launch(Dispatchers.Main) {
+                    Toast.makeText(applicationContext, "Lost device:  ${nodeID}", Toast.LENGTH_LONG).show()
+                }
+
+                val broadcast: Intent = Intent(ContactService.NODE_LOST)
+                    .putExtra("LOST_ID", nodeID)
+
+                LocalBroadcastManager.getInstance(applicationContext).sendBroadcast(broadcast)
+
                 removeDeviceFromFoundList(device.key)
             }
         }
@@ -312,6 +340,20 @@ public class ContactService() : Service(), CoroutineScope {
         deviceInRangeTask?.cancel()
         backgroundScanner?.stopScan()
         bleAdvertiser?.stopAdvertising()
+    }
+
+    /**
+     * Converts byte array to hex string
+     *
+     * @param bytes The data
+     * @return String represents the data in HEX string
+     */
+    fun byteArrayToHexString(bytes: ByteArray): String? {
+        val sb = StringBuilder()
+        for (b in bytes) {
+            sb.append(String.format("%02x", b))
+        }
+        return sb.toString()
     }
 
 

@@ -5,6 +5,7 @@ import android.content.Context
 import android.os.Build
 import android.os.Handler
 import android.util.Log
+import com.covid.nodetrace.ContactService
 import no.nordicsemi.android.support.v18.scanner.BluetoothLeScannerCompat
 import no.nordicsemi.android.support.v18.scanner.ScanCallback
 import no.nordicsemi.android.support.v18.scanner.ScanResult
@@ -79,7 +80,7 @@ class BleScanner {
             super.onScanResult(callbackType, result)
             val device = result.device
 
-            val manufacturerSpecificData = result.scanRecord!!.getManufacturerSpecificData(0xFFFF)
+            val manufacturerSpecificData = result.scanRecord!!.getManufacturerSpecificData(ContactService.NODE_IDENTIFIER)
             if (manufacturerSpecificData != null) {
                 advertisementFoundCallback!!.onAdvertisementFound(result)
             }
