@@ -59,10 +59,10 @@
         Nodes will advertise a bluetooth ID, while a User scans for bluetooth IDs
     </string>
 
-    <string name="permission_rationale_positive">Ok</string>
+    <string name="permission_rationale_positive">Grant Permission</string>
     <string name="permission_rationale_negative">Cancel</string>
-    <string name="fine_location_rationale_title">Location permission</string>
-    <string name="fine_location_rationale_text">The app needs your permission to be able to provide bluetooth communication</string>
+    <string name="fine_location_rationale_title">Bluetooth / Location permission</string>
+    <string name="fine_location_rationale_text">Android requires that Bluetooth apps require Location permission. Your location will remain private and will not be shared with anyone</string>
     <string name="storage_rationale_title">Storage permission</string>
     <string name="storage_rationale_text">The app needs your permission to store data on the phone</string>
 </resources>

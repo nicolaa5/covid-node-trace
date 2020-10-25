@@ -13,7 +13,7 @@ class PermissionHelper (private val requestedPermissions: Array<String>?) {
 
     companion object {
         private val TAG: String = PermissionHelper::class.java.getSimpleName()
-        private const val PERMISSION_REQUEST_CODE = 1
+        public const val PERMISSION_REQUEST_CODE = 1
     }
     /**
      * A method to handle the response to requesting an Android permission
