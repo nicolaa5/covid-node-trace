@@ -79,7 +79,6 @@ class ContactHistoryAdapter(context: Context) : BaseAdapter() {
         row.contactHealthStatus.text = DataFormatter.createHealthStatusFormat(status)
         row.contactDate.text = DataFormatter.createShortDateFormat(contact.date)
         row.contactDuration.text = DataFormatter.createDurationFormat(contact.duration)
-        row.contactDistance.text = DataFormatter.createDistanceFormat(contact.distance)
         row.contactLocation.text = DataFormatter.createLocationFormat(contact.latitude, contact.longitude)
 
         return view
@@ -100,14 +99,12 @@ private class ContactRow(row: View?) {
     public val contactHealthStatus: TextView
     public val contactDate: TextView
     public val contactDuration: TextView
-    public val contactDistance: TextView
     public val contactLocation: TextView
 
     init {
         contactHealthStatus = row?.findViewById(R.id.row_contact_health_status) as TextView
         contactDate = row?.findViewById(R.id.row_contact_date) as TextView
         contactDuration = row?.findViewById(R.id.row_contact_duration) as TextView
-        contactDistance = row?.findViewById(R.id.row_contact_distance) as TextView
         contactLocation = row?.findViewById(R.id.row_contact_location) as TextView
     }
 }

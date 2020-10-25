@@ -43,12 +43,10 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
     private lateinit var healthStatusTitle : TextView
     private lateinit var dateTitle : TextView
     private lateinit var durationTitle : TextView
-    private lateinit var distanceTitle : TextView
 
     private lateinit var contactHealthStatus : TextView
     private lateinit var contactDate : TextView
     private lateinit var contactDuration : TextView
-    private lateinit var contactDistance : TextView
     private lateinit var mapCardView : CardView
     private var mContacts : List<Contact> = emptyList()
 
@@ -68,12 +66,10 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
         healthStatusTitle = view.findViewById(R.id.health_title) as TextView
         dateTitle = view.findViewById(R.id.date_title) as TextView
         durationTitle = view.findViewById(R.id.duration_title) as TextView
-        distanceTitle = view.findViewById(R.id.distance_title) as TextView
 
         contactHealthStatus = view.findViewById(R.id.contact_health_status) as TextView
         contactDate = view.findViewById(R.id.contact_date) as TextView
         contactDuration = view.findViewById(R.id.contact_duration) as TextView
-        contactDistance= view.findViewById(R.id.contact_distance) as TextView
         mapCardView = view.findViewById(R.id.contact_map_card) as CardView
 
         initializeBottomSheet()
@@ -204,7 +200,6 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
         healthStatusTitle.setVisibility(View.VISIBLE)
         dateTitle.setVisibility(View.VISIBLE)
         durationTitle.setVisibility(View.VISIBLE)
-        distanceTitle.setVisibility(View.VISIBLE)
 
         var textColor = Color.GRAY
         val status : HealthStatus = HealthStatus.valueOf(contact.healthStatus)
@@ -222,7 +217,6 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
         contactHealthStatus.text = DataFormatter.createHealthStatusFormat(status)
         contactDate.text =DataFormatter.createDateFormat(contact.date)
         contactDuration.text = DataFormatter.createDurationFormat(contact.duration)
-        contactDistance.text = DataFormatter.createDistanceFormat(contact.distance)
     }
 
     /**
