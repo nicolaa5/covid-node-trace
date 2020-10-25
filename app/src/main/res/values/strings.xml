@@ -27,6 +27,8 @@
     <string name="contact_menu">Contacts</string>
     <string name="settings_menu">Settings</string>
     <string name="update_health_status_button">Submit</string>
+    <string name="update_health_status_sheet_button">Update my status</string>
+    <string name="cancel_health_status_button">Cancel</string>
     <string name="health_status">""</string>
 
     <string name="health_title">Health status</string>
@@ -40,6 +42,8 @@
     <string name="duration_title">"Duration"</string>
     <string name="distance_title">"Distance"</string>
 
+    <string name="health_status_title">Health Status</string>
+    <string name="health_status_sub_header">My health status:</string>
     <string name="history_sheet_title">Node Contacts</string>
     <string name="row_contact_health_status">"Status"</string>
     <string name="row_contact_date">"Date"</string>

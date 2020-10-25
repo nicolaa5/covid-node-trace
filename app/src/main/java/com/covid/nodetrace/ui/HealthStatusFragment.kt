@@ -10,6 +10,7 @@ import android.widget.Button
 import android.widget.NumberPicker
 import androidx.fragment.app.Fragment
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import androidx.navigation.fragment.findNavController
 import com.covid.nodetrace.Contact
 import com.covid.nodetrace.R
 import com.covid.nodetrace.database.AppDatabase
@@ -70,6 +71,12 @@ class HealthStatusFragment : Fragment(), CoroutineScope {
                 apply()
             }
         }
+
+        val cancelButton = view.findViewById(R.id.cancel_health_status_button) as Button
+        cancelButton.setOnClickListener {
+            findNavController().navigate(R.id.contact_fragment)
+        }
+
     }
 
     override fun onDestroy() {

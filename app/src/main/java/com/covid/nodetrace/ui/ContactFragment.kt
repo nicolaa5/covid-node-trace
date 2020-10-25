@@ -1,17 +1,20 @@
 package com.covid.nodetrace.ui
 
+import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
+import android.widget.Button
 import android.widget.ListView
 import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.navigation.fragment.findNavController
 import com.covid.nodetrace.Contact
 import com.covid.nodetrace.HealthStatus
 import com.covid.nodetrace.R
@@ -72,6 +75,12 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
         contactDuration = view.findViewById(R.id.contact_duration) as TextView
         mapCardView = view.findViewById(R.id.contact_map_card) as CardView
 
+        val healthStatusButton = view.findViewById(R.id.update_health_status_sheet_button) as Button
+
+        healthStatusButton.setOnClickListener {
+            findNavController().navigate(R.id.health_status_fragment)
+        }
+
         initializeBottomSheet()
         initializeMap(savedInstanceState)
 
@@ -129,7 +138,7 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
         }
 
         sheetBehavior.setHideable(false);
-        sheetBehavior.setPeekHeight(300);
+        sheetBehavior.setPeekHeight(400);
         sheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
 
 
