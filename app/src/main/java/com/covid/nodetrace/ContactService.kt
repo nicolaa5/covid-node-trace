@@ -1,10 +1,12 @@
 package com.covid.nodetrace
 
 import android.app.*
+import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.AdvertiseCallback
 import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
+import android.bluetooth.le.BluetoothLeAdvertiser
 import android.content.Intent
 import android.os.Binder
 import android.os.Build
@@ -206,14 +208,19 @@ public class ContactService() : Service() {
      */
     fun advertiseUniqueID () {
 
+        val adapter : BluetoothAdapter? =  BluetoothAdapter.getDefaultAdapter()
+        adapter?.setName("NODE")
+
         bleAdvertiser = BleAdvertiser()
 
         val advertisement = AdvertiseData.Builder()
-            .addManufacturerData(0xFF, "NODE".toByteArray())
+            .addManufacturerData(0xFFFF, "NODE".toByteArray())
+            .setIncludeDeviceName(true)
             .build()
 
         val settings = AdvertiseSettings.Builder()
-            .setAdvertiseMode(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
+            .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
+            .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
             .setConnectable(false)
             .build()
 

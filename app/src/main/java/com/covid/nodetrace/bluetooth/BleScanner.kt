@@ -80,7 +80,7 @@ class BleScanner {
             super.onScanResult(callbackType, result)
             val device = result.device
 
-            val manufacturerSpecificData = result.scanRecord!!.getManufacturerSpecificData(0xFF)
+            val manufacturerSpecificData = result.scanRecord!!.getManufacturerSpecificData(0xFFFF)
             if (manufacturerSpecificData != null) {
                 val rssi = result.rssi
                 val timestamp = result.timestampNanos
