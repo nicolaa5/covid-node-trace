@@ -1,7 +1,6 @@
 package com.covid.nodetrace.bluetooth
 
 import android.bluetooth.BluetoothAdapter
-import android.bluetooth.le.AdvertiseData
 import android.content.Context
 import android.os.Build
 import android.os.Handler
@@ -18,7 +17,7 @@ class BleScanner {
         private const val NODE_STRING = "NODE"
     }
 
-    private var deviceFoundCallback: OnDeviceFound? = null
+    private var advertisementFoundCallback: OnAdvertisementFound? = null
     private val mHandler: Handler
     private var applicationContext: Context?
     private var mScanning = false
@@ -40,8 +39,8 @@ class BleScanner {
      *
      * @param callback the callback listener.
      */
-    fun scanLeDevice(callback: OnDeviceFound?) {
-        deviceFoundCallback = callback
+    fun scanLeDevice(callback: OnAdvertisementFound?) {
+        advertisementFoundCallback = callback
         scanLeDevice()
     }
 
@@ -82,9 +81,7 @@ class BleScanner {
 
             val manufacturerSpecificData = result.scanRecord!!.getManufacturerSpecificData(0xFFFF)
             if (manufacturerSpecificData != null) {
-                val rssi = result.rssi
-                val timestamp = result.timestampNanos
-                deviceFoundCallback!!.onDeviceFound(device, manufacturerSpecificData, timestamp)
+                advertisementFoundCallback!!.onAdvertisementFound(result)
             }
         }
     }
@@ -105,7 +102,7 @@ class BleScanner {
     fun destroyScanner() {
         stopScan()
         mLeScanCallback = null
-        deviceFoundCallback = null
+        advertisementFoundCallback = null
         applicationContext = null
     }
 }

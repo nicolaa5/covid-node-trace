@@ -12,6 +12,15 @@ import android.util.Log
 class BleAdvertiser @TargetApi(Build.VERSION_CODES.M) constructor() {
     private val TAG = "BleAdvertiser"
     private val advertiser: BluetoothLeAdvertiser?
+    private var advertiseCallback : AdvertiseCallback? = object : AdvertiseCallback() {
+        override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
+            super.onStartSuccess(settingsInEffect)
+        }
+
+        override fun onStartFailure(errorCode: Int) {
+            super.onStartFailure(errorCode)
+        }
+    }
 
     init {
         advertiser = BluetoothAdapter.getDefaultAdapter().bluetoothLeAdvertiser
@@ -25,20 +34,13 @@ class BleAdvertiser @TargetApi(Build.VERSION_CODES.M) constructor() {
             return;
         }
 
-        val settings = settings
-
-        advertiser.startAdvertising(settings, data, object : AdvertiseCallback() {
-            override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
-                super.onStartSuccess(settingsInEffect)
-            }
-
-            override fun onStartFailure(errorCode: Int) {
-                super.onStartFailure(errorCode)
-            }
-        })
+        advertiser.startAdvertising(settings, data, advertiseCallback)
     }
 
-    fun stopAdvertising (callback: AdvertiseCallback? = null) {
-        advertiser?.stopAdvertising(callback)
+    fun stopAdvertising () {
+        if (advertiseCallback == null)
+            return
+
+        advertiser?.stopAdvertising(advertiseCallback!!)
     }
 }

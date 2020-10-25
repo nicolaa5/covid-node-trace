@@ -2,32 +2,35 @@ package com.covid.nodetrace
 
 import android.app.*
 import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
-import android.bluetooth.le.AdvertiseCallback
 import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
-import android.bluetooth.le.BluetoothLeAdvertiser
 import android.content.Intent
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
+import android.os.SystemClock
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.covid.nodetrace.bluetooth.BleScanner
-import com.covid.nodetrace.bluetooth.OnDeviceFound
+import com.covid.nodetrace.bluetooth.OnAdvertisementFound
 import com.covid.nodetrace.bluetooth.ScanActive
-import com.google.android.gms.nearby.messages.Distance
-import com.google.android.gms.nearby.messages.Message
-import com.google.android.gms.nearby.messages.MessageListener
+import com.squareup.okhttp.Dispatcher
 import com.trace.api.data.BleAdvertiser
+import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers.Main
+import no.nordicsemi.android.support.v18.scanner.ScanResult
 import java.util.*
+import java.util.concurrent.TimeUnit
+import kotlin.coroutines.CoroutineContext
 
 
-public class ContactService() : Service() {
+public class ContactService() : Service(), CoroutineScope {
     private val TAG = "ContactService"
     val CHANNEL_ID = "ForegroundServiceChannel"
+
+    // Consider the device out of range if no advertisements are found for 8 seconds
+    val CONTACT_OUT_OF_RANGE_TIMEOUT : Int = 8
 
     var mService : ContactService.LocalBinder? = null
 
@@ -37,6 +40,10 @@ public class ContactService() : Service() {
 
     var backgroundScanner : BleScanner? = null
     var bleAdvertiser : BleAdvertiser? = null
+    var deviceInRangeTask : Timer? = null
+    var foundDevices : HashMap<String, ScanResult> = hashMapOf()
+
+    override val coroutineContext: CoroutineContext = Dispatchers.Main + SupervisorJob()
 
     /**
      * The communication type defines how the communication between devices with the app is done
@@ -55,17 +62,6 @@ public class ContactService() : Service() {
         val NODE_LOST = "com.covid.nodetrace.ContactService.NODE_LOST"
         val DISTANCE_UPDATED = "com.covid.nodetrace.ContactService.DISTANCE_UPDATED"
     }
-
-    /**
-     * A unique 128-bit UUID is generated and send and used as the main
-     * identifier when communicating messages
-     */
-    private var uniqueMessage: Message? = null
-
-    /**
-     * A listener that is called by Google's Nearby Messages API when a message is received
-     */
-    private var messageListener: MessageListener? = null
 
     inner class LocalBinder : Binder() {
 
@@ -194,13 +190,8 @@ public class ContactService() : Service() {
     override fun onDestroy() {
         super.onDestroy()
 
-        if (uniqueMessage != null)
-            Bluetooth.getBluetoothAccess(this)?.unpublish(uniqueMessage!!)
-
-        if (messageListener != null)
-            Bluetooth.getBluetoothAccess(this)?.unsubscribe(messageListener!!)
-
-         backgroundScanner?.destroyScanner()
+        stopAdvertisingAndScanning()
+        coroutineContext[Job]!!.cancel()
     }
 
     /**
@@ -230,7 +221,7 @@ public class ContactService() : Service() {
     /**
      * Scans for devices in the area that advertise UUIDs
      */
-    fun scanForNearbyDevices () {
+    private fun scanForNearbyDevices () {
         //Scan in the background for the device address that was fetched from the cloud
         backgroundScanner = BleScanner(applicationContext, object : ScanActive {
             override fun isBleScannerActive(isActive: Boolean) {
@@ -238,13 +229,55 @@ public class ContactService() : Service() {
             }
         })
 
-        backgroundScanner?.scanLeDevice ( object : OnDeviceFound {
-            override fun onDeviceFound(device: BluetoothDevice, data: ByteArray, timestamp : Long) {
-                Toast.makeText(applicationContext, "Found device:  + ${data}", Toast.LENGTH_LONG).show()
+        deviceInRangeTask = Timer()
+        deviceInRangeTask?.schedule(object : TimerTask() {
+            override fun run() {
+                checkDevicesInRangeTask()
+            }
+        }, 1, 1000)
+
+        backgroundScanner?.scanLeDevice(object : OnAdvertisementFound {
+            override fun onAdvertisementFound(result: ScanResult) {
+                val device = result.device
+                val data = result.scanRecord?.getManufacturerSpecificData(0xFFFF)
+
+                val newDeviceFound = hasNewDeviceBeenFound(result)
+                foundDevices.set(result.device.address, result)
+
+                if (newDeviceFound) {
+                    Toast.makeText(applicationContext,"Found device:  ${data?.asUByteArray()}", Toast.LENGTH_LONG).show()
+                }
             }
         })
     }
 
+    private fun hasNewDeviceBeenFound(result: ScanResult) : Boolean  {
+        for (device in foundDevices) {
+            if (device.key == result.device.address) {
+                return false
+            }
+        }
+        return true
+    }
+
+    private fun checkDevicesInRangeTask() {
+        for (device in foundDevices) {
+            val currentTime = SystemClock.elapsedRealtime() / 1000
+            val storedTime = device.value.timestampNanos / 1000000000
+            val millisecondDifference =  (currentTime - storedTime).toLong()
+
+            if (millisecondDifference > CONTACT_OUT_OF_RANGE_TIMEOUT) {
+                this.launch(Dispatchers.Main) {
+                    Toast.makeText(applicationContext,"Lost device:  ${device.key}", Toast.LENGTH_LONG).show()
+                }
+                removeDeviceFromFoundList(device.key)
+            }
+        }
+    }
+
+    private fun removeDeviceFromFoundList(deviceAddress: String) {
+        foundDevices.remove(deviceAddress)
+    }
     /**
      * Updates the communication by first stopping all previous settings and then
      * calling calling advertising/scanning methods based on the chosen communication type
@@ -276,6 +309,7 @@ public class ContactService() : Service() {
      * Stops both advertising IDs and scanning for IDs in the area by unsubscribing/unpublishing
      */
     fun stopAdvertisingAndScanning() {
+        deviceInRangeTask?.cancel()
         backgroundScanner?.stopScan()
         bleAdvertiser?.stopAdvertising()
     }
