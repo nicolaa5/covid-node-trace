@@ -1,6 +1,10 @@
 package com.covid.nodetrace
 
 import android.app.*
+import android.bluetooth.BluetoothDevice
+import android.bluetooth.le.AdvertiseCallback
+import android.bluetooth.le.AdvertiseData
+import android.bluetooth.le.AdvertiseSettings
 import android.content.Intent
 import android.os.Binder
 import android.os.Build
@@ -9,7 +13,13 @@ import android.util.Log
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import com.google.android.gms.nearby.messages.*
+import com.covid.nodetrace.bluetooth.BleScanner
+import com.covid.nodetrace.bluetooth.OnDeviceFound
+import com.covid.nodetrace.bluetooth.ScanActive
+import com.google.android.gms.nearby.messages.Distance
+import com.google.android.gms.nearby.messages.Message
+import com.google.android.gms.nearby.messages.MessageListener
+import com.trace.api.data.BleAdvertiser
 import java.util.*
 
 
@@ -22,6 +32,9 @@ public class ContactService() : Service() {
     var mBound : Boolean = false
     var mActivityIsChangingConfiguration : Boolean = false
     var communicationType = CommunicationType.NONE
+
+    var backgroundScanner : BleScanner? = null
+    var bleAdvertiser : BleAdvertiser? = null
 
     /**
      * The communication type defines how the communication between devices with the app is done
@@ -184,74 +197,52 @@ public class ContactService() : Service() {
 
         if (messageListener != null)
             Bluetooth.getBluetoothAccess(this)?.unsubscribe(messageListener!!)
+
+         backgroundScanner?.destroyScanner()
     }
 
     /**
      * Advertises (BLE term for sending/transmitting data) a unique ID to devices in the area
      */
     fun advertiseUniqueID () {
-        val prefs = getSharedPreferences(getString(R.string.shared_preferences), MODE_PRIVATE)
-        val uniqueID = UUID.randomUUID().toString()
-        uniqueMessage = Message(uniqueID.toByteArray())
 
-        Bluetooth.getBluetoothAccess(this)?.publish(uniqueMessage!!)
+        bleAdvertiser = BleAdvertiser()
+
+        val advertisement = AdvertiseData.Builder()
+            .addManufacturerData(0xFF, "NODE".toByteArray())
+            .build()
+
+        val settings = AdvertiseSettings.Builder()
+            .setAdvertiseMode(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
+            .setConnectable(false)
+            .build()
+
+        bleAdvertiser?.advertiseData(advertisement, settings)
     }
 
     /**
      * Scans for devices in the area that advertise UUIDs
      */
     fun scanForNearbyDevices () {
-        messageListener = object : MessageListener() {
-            override fun onFound(message: Message) {
-                val foundID = String(message.content)
-                Log.d(TAG, "Found ID: $foundID")
-
-                val broadcast: Intent = Intent(ContactService.NODE_FOUND)
-                    .putExtra("FOUND_ID", foundID)
-
-                LocalBroadcastManager.getInstance(baseContext).sendBroadcast(broadcast)
-                Toast.makeText(applicationContext, "Found device:  + ${foundID}", Toast.LENGTH_LONG).show()
-            }
-
-            override fun onLost(message: Message) {
-                val lostID = String(message.content)
-                Log.d(TAG, "Lost sight of ID: $lostID")
-
-                val broadcast: Intent = Intent(ContactService.NODE_LOST)
-                    .putExtra("LOST_ID", lostID)
-
-                LocalBroadcastManager.getInstance(applicationContext).sendBroadcast(broadcast)
-                Toast.makeText(applicationContext, "Lost device:  + ${lostID}", Toast.LENGTH_LONG).show()
-            }
-
-            override fun onDistanceChanged(message: Message?, distance: Distance?) {
-                super.onDistanceChanged(message, distance)
-
-                val content : ByteArray? = message?.content
-
-                if (content == null)
-                    return
-
-                val ID = String(content)
-
-                val broadcast: Intent = Intent(ContactService.DISTANCE_UPDATED)
-                    .putExtra("ID", ID)
-                    .putExtra("Distance", distance?.meters)
-
-                LocalBroadcastManager.getInstance(applicationContext).sendBroadcast(broadcast)
-
+        //Scan in the background for the device address that was fetched from the cloud
+        backgroundScanner = BleScanner(applicationContext, object : ScanActive {
+            override fun isBleScannerActive(isActive: Boolean) {
 
             }
-        }
+        })
 
-        Bluetooth.getBluetoothAccess(this)?.subscribe(messageListener!!)
+        backgroundScanner?.scanLeDevice ( object : OnDeviceFound {
+            override fun onDeviceFound(device: BluetoothDevice, data: ByteArray, timestamp : Long) {
+                Toast.makeText(applicationContext, "Found device:  + ${data}", Toast.LENGTH_LONG).show()
+            }
+        })
     }
 
     /**
      * Updates the communication by first stopping all previous settings and then
      * calling calling advertising/scanning methods based on the chosen communication type
      */
-    fun updateCommunicationType (newCommunicationType: CommunicationType) {
+    fun updateCommunicationType(newCommunicationType: CommunicationType) {
         if (newCommunicationType == communicationType)
             return
 
@@ -278,11 +269,8 @@ public class ContactService() : Service() {
      * Stops both advertising IDs and scanning for IDs in the area by unsubscribing/unpublishing
      */
     fun stopAdvertisingAndScanning() {
-        if (uniqueMessage != null)
-            Bluetooth.getBluetoothAccess(this)?.unpublish(uniqueMessage!!)
-
-        if (messageListener != null)
-            Bluetooth.getBluetoothAccess(this)?.unsubscribe(messageListener!!)
+        backgroundScanner?.stopScan()
+        bleAdvertiser?.stopAdvertising()
     }
 
 
