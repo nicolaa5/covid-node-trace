@@ -3,21 +3,18 @@ package com.covid.nodetrace.ui
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
+import android.util.DisplayMetrics
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.AdapterView
-import android.widget.Button
-import android.widget.ListView
-import android.widget.TextView
+import android.widget.*
 import androidx.cardview.widget.CardView
 import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
-import com.covid.nodetrace.Contact
-import com.covid.nodetrace.HealthStatus
-import com.covid.nodetrace.R
+import com.covid.nodetrace.*
 import com.covid.nodetrace.util.DataFormatter
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -43,6 +40,7 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
     private var mGoogleMap: GoogleMap? = null
     private lateinit var mMap: MapView
 
+    private lateinit var nodeTitle : TextView
     private lateinit var healthStatusTitle : TextView
     private lateinit var dateTitle : TextView
     private lateinit var durationTitle : TextView
@@ -66,6 +64,7 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
         super.onViewCreated(view, savedInstanceState)
         contactHistoryListView = view.findViewById(R.id.contact_history_list_view) as ListView
 
+        nodeTitle = view.findViewById(R.id.node_contact_title) as TextView
         healthStatusTitle = view.findViewById(R.id.health_title) as TextView
         dateTitle = view.findViewById(R.id.date_title) as TextView
         durationTitle = view.findViewById(R.id.duration_title) as TextView
@@ -75,10 +74,29 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
         contactDuration = view.findViewById(R.id.contact_duration) as TextView
         mapCardView = view.findViewById(R.id.contact_map_card) as CardView
 
+        val communication_mode_status = view.findViewById(R.id.communication_mode_status) as TextView
+
+        model.communicationType.observe(requireActivity(), Observer<ContactService.CommunicationType> { communicationType ->
+            when (communicationType) {
+                ContactService.CommunicationType.SCAN -> {
+                    communication_mode_status.text = "Scanning for devices"
+                }
+                ContactService.CommunicationType.ADVERTISE -> {
+                    communication_mode_status.text = "Advertising unique ID"
+                }
+            }
+        })
+
+
         val healthStatusButton = view.findViewById(R.id.update_health_status_sheet_button) as Button
 
         healthStatusButton.setOnClickListener {
             findNavController().navigate(R.id.health_status_fragment)
+
+            with(requireActivity().getPreferences(Context.MODE_PRIVATE).edit()) {
+                putInt(resources.getString(com.covid.nodetrace.R.string.screen_state), MainActivity.Screens.HEALTH_STATUS.ordinal)
+                apply()
+            }
         }
 
         initializeBottomSheet()
@@ -138,7 +156,7 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
         }
 
         sheetBehavior.setHideable(false);
-        sheetBehavior.setPeekHeight(400);
+        sheetBehavior.setPeekHeight(200);
         sheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
 
 
@@ -206,6 +224,7 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
      * Sets all the UI component data from the supplied contact
      */
     private fun displayContactData(contact : Contact) {
+        nodeTitle.setVisibility(View.VISIBLE)
         healthStatusTitle.setVisibility(View.VISIBLE)
         dateTitle.setVisibility(View.VISIBLE)
         durationTitle.setVisibility(View.VISIBLE)

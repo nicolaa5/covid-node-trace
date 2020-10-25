@@ -12,6 +12,7 @@ import androidx.fragment.app.Fragment
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.fragment.findNavController
 import com.covid.nodetrace.Contact
+import com.covid.nodetrace.MainActivity
 import com.covid.nodetrace.R
 import com.covid.nodetrace.database.AppDatabase
 import com.covid.nodetrace.database.DatabaseFactory
@@ -75,6 +76,11 @@ class HealthStatusFragment : Fragment(), CoroutineScope {
         val cancelButton = view.findViewById(R.id.cancel_health_status_button) as Button
         cancelButton.setOnClickListener {
             findNavController().navigate(R.id.contact_fragment)
+
+            with(requireActivity().getPreferences(Context.MODE_PRIVATE).edit()) {
+                putInt(resources.getString(com.covid.nodetrace.R.string.screen_state), MainActivity.Screens.CONTACT.ordinal)
+                apply()
+            }
         }
 
     }

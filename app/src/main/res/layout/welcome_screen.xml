@@ -3,59 +3,141 @@
     xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <LinearLayout
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:weightSum="8">
-
-        <ImageView
-            android:id="@+id/welcome_screen_graphic"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="20dp"
-            android:layout_weight="4"
-            android:contentDescription="@string/app_name"
-            android:src="@drawable/ic_welcome_screen_graphic" />
-
+        android:layout_height="wrap_content"
+        android:fadeScrollbars="false">
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
-            android:layout_weight="4">
-            <TextView
-                android:id="@+id/welcome_screen_title"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="10dp"
-                android:text="@string/app_name"
-                android:textAlignment="center"
-                android:textSize="30sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/welcome_screen_explanation"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="20dp"
-                android:layout_marginStart="30dp"
-                android:layout_marginEnd="30dp"
-                android:text="@string/welcome_explanation"
-                android:textAlignment="center"
-                android:textSize="14sp"/>
-
-            <Button
-                android:id="@+id/welcome_screen_button"
+            android:layout_marginTop="20dp"
+            android:weightSum="16">
+            <RelativeLayout
+                android:id="@+id/image_holder"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_margin="20dp"
-                android:paddingLeft="40dp"
-                android:paddingRight="40dp"
-                android:textSize="24sp"
-                android:background="@color/colorPrimary"
-                android:textColor="@color/white"
-                android:text="@string/welcome_screen_button"/>
+                android:layout_gravity="center_vertical" >
+                <ImageView
+                    android:id="@+id/welcome_screen_graphic"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    android:layout_margin="20dp"
+                    android:contentDescription="@string/app_name"
+                    android:src="@drawable/ic_welcome_screen_graphic" />
+            </RelativeLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_weight="8">
+                <TextView
+                    android:id="@+id/welcome_screen_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="10dp"
+                    android:text="@string/app_name"
+                    android:textAlignment="center"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/welcome_screen_explanation"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="20dp"
+                    android:layout_marginStart="30dp"
+                    android:layout_marginEnd="30dp"
+                    android:text="@string/welcome_explanation"
+                    android:textAlignment="center"
+                    android:textSize="14sp"/>
+
+                <Button
+                    android:id="@+id/welcome_screen_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_margin="20dp"
+                    android:paddingLeft="20dp"
+                    android:paddingRight="20dp"
+                    android:textSize="18sp"
+                    android:background="@color/colorPrimary"
+                    android:textColor="@color/white"
+                    android:text="@string/welcome_screen_button"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:layout_weight="8">
+
+                <LinearLayout
+                    android:id="@+id/dev_section"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center">
+
+                    <TextView
+                        android:id="@+id/type_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="10dp"
+                        android:text="@string/type_title"
+                        android:textAlignment="center"
+                        android:textSize="24sp"
+                        android:textStyle="bold" />
+
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center">
+                        <TextView
+                            android:id="@+id/node_title"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:padding="10dp"
+                            android:text="@string/node_title"
+                            android:textAlignment="center"
+                            android:textSize="14sp" />
+
+                        <Switch
+                            android:id="@+id/type_switch"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:layout_margin="20dp"
+                            android:outlineAmbientShadowColor="@color/colorPrimary"
+                            android:outlineSpotShadowColor="@color/colorPrimary"
+                            android:textColor="@color/white"/>
+
+                        <TextView
+                            android:id="@+id/user_title"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:padding="10dp"
+                            android:text="@string/user_title"
+                            android:textAlignment="center"
+                            android:textSize="14sp"/>
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/type_explanation"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="20dp"
+                        android:layout_marginStart="30dp"
+                        android:layout_marginEnd="30dp"
+                        android:text="@string/type_explanation"
+                        android:textAlignment="center"
+                        android:textSize="14sp"/>
+                </LinearLayout>
+            </LinearLayout>
         </LinearLayout>
-    </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>

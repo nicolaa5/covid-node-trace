@@ -50,8 +50,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
     enum class Screens {
         WELCOME,
         HEALTH_STATUS,
-        CONTACT,
-        SETTINGS
+        CONTACT
     }
 
     //================================================================================
@@ -151,14 +150,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         when (item.itemId) {
-            R.id.health_status_menu -> {
-                showScreen(Screens.HEALTH_STATUS)
-            }
-            R.id.contact_menu -> {
-                showScreen(Screens.CONTACT)
-            }
-            R.id.settings_menu -> {
-                showScreen(Screens.SETTINGS)
+            R.id.welcome_menu -> {
+                showScreen(Screens.WELCOME)
             }
             else -> {
                 return super.onOptionsItemSelected(item)
@@ -227,9 +220,6 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
             }
             Screens.CONTACT -> {
                 findNavController(R.id.nav_host_fragment).navigate(R.id.contact_fragment)
-            }
-            Screens.SETTINGS -> {
-                findNavController(R.id.nav_host_fragment).navigate(R.id.settings_fragment)
             }
         }
     }

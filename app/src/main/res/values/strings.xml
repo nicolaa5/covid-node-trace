@@ -21,8 +21,8 @@
         Welcome to the Covid-19 Node Tracer app.
         With this application you can track whether you have been in contact with someone who had Covid-19.
     </string>
-    <string name="welcome_screen_button">Start</string>
-    <string name="welcome_menu">Introduction</string>
+    <string name="welcome_screen_button">Go to App</string>
+    <string name="welcome_menu">About the app</string>
     <string name="health_status_menu">Health Status</string>
     <string name="contact_menu">Contacts</string>
     <string name="settings_menu">Settings</string>
@@ -42,6 +42,8 @@
     <string name="duration_title">"Duration"</string>
     <string name="distance_title">"Distance"</string>
 
+    <string name="status_title">Status</string>
+    <string name="node_contact_title">Node</string>
     <string name="health_status_title">Health Status</string>
     <string name="health_status_sub_header">My health status:</string>
     <string name="history_sheet_title">Node Contacts</string>
@@ -51,11 +53,9 @@
     <string name="row_contact_distance">"Distance"</string>
     <string name="row_contact_location">"Location"</string>
 
+    <string name="communication_mode_status">Scanning for devices</string>
+
     <string name="settings_privacy_title">Privacy</string>
-    <string name="privacy_explanation">
-        This application does not share your private data with any users or 3rd parties.
-        The data is kept encrypted on your device only
-    </string>
     <string name="type_title">Mode</string>
     <string name="node_title">Node</string>
     <string name="user_title">User</string>
