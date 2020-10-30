@@ -5,7 +5,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.Switch
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.covid.nodetrace.ContactService
@@ -19,6 +22,8 @@ class SettingsFragment: Fragment() {
     private val model: AppViewModel by activityViewModels()
 
     private lateinit var advertiseOrScanSwitch : Switch
+    private var devModeClicks : Int = 0
+    private final val DEV_CLICKS_NEEDED = 6
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
@@ -58,6 +63,35 @@ class SettingsFragment: Fragment() {
             with (requireActivity().getPreferences(Context.MODE_PRIVATE).edit()) {
                 putInt(resources.getString(R.string.communication_type_state), communicationTypeState)
                 apply()
+            }
+        }
+
+        val devMode : Boolean = sharedPref.getBoolean(getString(R.string.dev_mode), false)
+
+        if (devMode) {
+            val devSection = view.findViewById(R.id.dev_section) as LinearLayout
+            devSection.visibility = View.VISIBLE
+        }
+        else {
+            val devSection = view.findViewById(R.id.dev_section) as LinearLayout
+            devSection.visibility = View.GONE
+        }
+
+        val settingsIcon = view.findViewById(R.id.privacy_icon) as ImageView
+        settingsIcon.setOnClickListener {
+            devModeClicks++
+
+            if (devModeClicks >= 2 && devModeClicks < DEV_CLICKS_NEEDED) {
+                Toast.makeText(requireContext(), "${DEV_CLICKS_NEEDED - devModeClicks} steps away from dev mode", Toast.LENGTH_SHORT).show()
+            }
+            else if (devModeClicks >= DEV_CLICKS_NEEDED) {
+                val devSection = view.findViewById(R.id.dev_section) as LinearLayout
+                devSection.visibility = View.VISIBLE
+
+                with (requireActivity().getPreferences(Context.MODE_PRIVATE).edit()) {
+                    putBoolean(resources.getString(R.string.dev_mode), true)
+                    apply()
+                }
             }
         }
     }

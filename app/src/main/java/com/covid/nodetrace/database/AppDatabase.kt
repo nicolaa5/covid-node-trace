@@ -7,6 +7,9 @@ import androidx.room.RoomDatabase
 import com.covid.nodetrace.Contact
 import com.covid.nodetrace.util.SingletonHolder
 
+/**
+ * A single point of entry (see Singleton pattern) where access to the database can be requested
+ */
 @Database(entities = arrayOf(Contact::class), version = 1)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun contactDao(): ContactDao

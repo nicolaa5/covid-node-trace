@@ -18,6 +18,9 @@ object NetworkHelper {
         DISCONNECTED
     }
 
+    /**
+     * Checks if the device is connected to the internet
+     */
     fun isConnectedToNetwork(context: Context): Boolean {
         val connectionManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val networkInfo = connectionManager.activeNetworkInfo ?: return false
@@ -30,6 +33,9 @@ object NetworkHelper {
         return networkInfo.isConnected
     }
 
+    /**
+     * Sets a listener that is updated when a network connected changes between 'Available' and 'Lost'
+     */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun registerNetworkCallback(context: Context) {
         try {

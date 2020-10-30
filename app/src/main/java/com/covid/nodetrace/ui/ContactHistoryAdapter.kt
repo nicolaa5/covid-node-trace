@@ -25,11 +25,17 @@ class ContactHistoryAdapter(context: Context) : BaseAdapter() {
         mInflator = LayoutInflater.from(context)
     }
 
+    /**
+     * Update the UI with contacts supplied in the list
+     */
     fun updateValues(contacts: List<Contact>) {
         mContacts = contacts
         rerenderList()
     }
 
+    /**
+     * Gets the Contact item based on it's position in the list
+     */
     override fun getItem(position: Int): Contact {
         return mContacts.get(position)
     }
@@ -51,7 +57,10 @@ class ContactHistoryAdapter(context: Context) : BaseAdapter() {
     }
 
 
-
+    /**
+     * Called by the Adapter when updates to the list occur
+     * Data is converted in the right format before displaying it on the UI
+     */
     override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View? {
         val view: View?
         val row: ContactRow
@@ -70,7 +79,6 @@ class ContactHistoryAdapter(context: Context) : BaseAdapter() {
         row.contactHealthStatus.text = DataFormatter.createHealthStatusFormat(status)
         row.contactDate.text = DataFormatter.createShortDateFormat(contact.date)
         row.contactDuration.text = DataFormatter.createDurationFormat(contact.duration)
-        row.contactDistance.text = DataFormatter.createDistanceFormat(contact.distance)
         row.contactLocation.text = DataFormatter.createLocationFormat(contact.latitude, contact.longitude)
 
         return view
@@ -84,20 +92,19 @@ public enum class TimeRange {
 }
 
 
-
-
+/**
+ * Specifies every row in the list that shows the contact database entries
+ */
 private class ContactRow(row: View?) {
     public val contactHealthStatus: TextView
     public val contactDate: TextView
     public val contactDuration: TextView
-    public val contactDistance: TextView
     public val contactLocation: TextView
 
     init {
         contactHealthStatus = row?.findViewById(R.id.row_contact_health_status) as TextView
         contactDate = row?.findViewById(R.id.row_contact_date) as TextView
         contactDuration = row?.findViewById(R.id.row_contact_duration) as TextView
-        contactDistance = row?.findViewById(R.id.row_contact_distance) as TextView
         contactLocation = row?.findViewById(R.id.row_contact_location) as TextView
     }
 }

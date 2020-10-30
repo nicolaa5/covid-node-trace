@@ -11,6 +11,13 @@ public enum class HealthStatus {
     SICK
 }
 
+/**
+ * A Contact is defined as an interaction between two devices
+ * One of the devices advertises/sends a contact ID (a unique 128-bit UUID), which is scanned/received by the other device.
+ *
+ * When a contact is started we log metrics such as the date, location, duration, estimated distance.
+ * @Note: This data is all kept in the Room database and not shared with a remote database
+ */
 @Entity
 open class Contact (
     @PrimaryKey open val ID : String,

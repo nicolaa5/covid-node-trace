@@ -1,23 +1,43 @@
 package com.covid.nodetrace
 
 import android.app.*
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.le.AdvertiseData
+import android.bluetooth.le.AdvertiseSettings
 import android.content.Intent
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
+import android.os.SystemClock
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import com.google.android.gms.common.api.internal.ConnectionCallbacks
-import com.google.android.gms.nearby.Nearby
-import com.google.android.gms.nearby.messages.*
+import com.covid.nodetrace.bluetooth.BleScanner
+import com.covid.nodetrace.bluetooth.OnAdvertisementFound
+import com.covid.nodetrace.bluetooth.ScanActive
+import com.trace.api.data.BleAdvertiser
+import kotlinx.coroutines.*
+import no.nordicsemi.android.support.v18.scanner.ScanResult
 import java.util.*
+import kotlin.coroutines.CoroutineContext
+import kotlin.experimental.and
 
 
-public class ContactService() : Service() {
+public class ContactService() : Service(), CoroutineScope {
     private val TAG = "ContactService"
     val CHANNEL_ID = "ForegroundServiceChannel"
+
+    companion object {
+        // Consider the device out of range if no advertisements are found for 8 seconds
+        val CONTACT_OUT_OF_RANGE_TIMEOUT : Int = 8
+
+        public final val NODE_IDENTIFIER = 0xFFFF
+
+        val NODE_FOUND = "com.covid.nodetrace.ContactService.NODE_FOUND"
+        val NODE_LOST = "com.covid.nodetrace.ContactService.NODE_LOST"
+        val DISTANCE_UPDATED = "com.covid.nodetrace.ContactService.DISTANCE_UPDATED"
+    }
 
     var mService : ContactService.LocalBinder? = null
 
@@ -25,31 +45,31 @@ public class ContactService() : Service() {
     var mActivityIsChangingConfiguration : Boolean = false
     var communicationType = CommunicationType.NONE
 
+    var backgroundScanner : BleScanner? = null
+    var bleAdvertiser : BleAdvertiser? = null
+    var deviceInRangeTask : Timer? = null
+    var foundDevices : HashMap<String, ScanResult> = hashMapOf()
+
+    override val coroutineContext: CoroutineContext = Dispatchers.Main + SupervisorJob()
+
+    /**
+     * The communication type defines how the communication between devices with the app is done
+     * There's currently two types in the app:
+     * - NODE: Only sends IDs to devices with the app in the area
+     * - USER: Only scans for contact IDs in the area
+     */
     enum class CommunicationType {
         SCAN,
         ADVERTISE,
         SCAN_AND_ADVERTISE,
         NONE
     }
-    companion object {
-        val NODE_FOUND = "com.covid.nodetrace.ContactService.NODE_FOUND"
-        val NODE_LOST = "com.covid.nodetrace.ContactService.NODE_LOST"
-        val DISTANCE_UPDATED = "com.covid.nodetrace.ContactService.DISTANCE_UPDATED"
-    }
-
-    /**
-     * A unique 128-bit UUID is generated and send and used as the main
-     * identifier when communicating messages
-     */
-    private var uniqueMessage: Message? = null
-
-    /**
-     * A listener that is called by Google's Nearby Messages API when a message is received
-     */
-    private var messageListener: MessageListener? = null
 
     inner class LocalBinder : Binder() {
 
+        /**
+         * Changes the communication type
+         */
         fun setCommunicationType(type: CommunicationType) {
             updateCommunicationType(type)
         }
@@ -78,6 +98,9 @@ public class ContactService() : Service() {
         return LocalBinder()
     }
 
+    /**
+     * Called when the connected between the activity and the service is established
+     */
     override fun onBind(intent: Intent?): IBinder? {
         mBound = true
         return getBinder()
@@ -89,9 +112,6 @@ public class ContactService() : Service() {
      *
      * More information about foreground services can be found here:
      * https://developer.android.com/guide/components/foreground-services
-     *
-     * If the system kills the service when running low on memory 'START_STICKY' tells the
-     * system to restart the service when enough resources are available again
      */
     fun createForegroundService(activity: Activity, communicationType: CommunicationType) {
         createNotificationChannel()
@@ -137,6 +157,12 @@ public class ContactService() : Service() {
         startForeground(1, notification)
     }
 
+    /**
+     * Called when the service is started
+     *
+     * If the system kills the service when running low on memory 'START_STICKY' tells the
+     * system to restart the service when enough resources are available again
+     */
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         return START_STICKY
     }
@@ -166,75 +192,125 @@ public class ContactService() : Service() {
     override fun onDestroy() {
         super.onDestroy()
 
-        if (uniqueMessage != null)
-            Nearby.getMessagesClient(this)?.unpublish(uniqueMessage!!)
-
-        if (messageListener != null)
-            Nearby.getMessagesClient(this)?.unsubscribe(messageListener!!)
+        stopAdvertisingAndScanning()
+        coroutineContext[Job]!!.cancel()
     }
 
     /**
      * Advertises (BLE term for sending/transmitting data) a unique ID to devices in the area
      */
     fun advertiseUniqueID () {
-        val prefs = getSharedPreferences(getString(R.string.shared_preferences), MODE_PRIVATE)
-        val uniqueID = UUID.randomUUID().toString()
-        uniqueMessage = Message(uniqueID.toByteArray())
 
-        Nearby.getMessagesClient(this).publish(uniqueMessage!!)
+        val adapter : BluetoothAdapter? =  BluetoothAdapter.getDefaultAdapter()
+        adapter?.setName("NODE")
+
+        bleAdvertiser = BleAdvertiser()
+
+        val randomUUID = UUID.randomUUID().toString().toByteArray().copyOfRange(0, 16)
+
+        val advertisement = AdvertiseData.Builder()
+            .addManufacturerData(NODE_IDENTIFIER, randomUUID)
+            .setIncludeDeviceName(true)
+            .build()
+
+        val settings = AdvertiseSettings.Builder()
+            .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
+            .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
+            .setConnectable(false)
+            .build()
+
+        bleAdvertiser?.advertiseData(advertisement, settings)
     }
 
     /**
      * Scans for devices in the area that advertise UUIDs
      */
-    fun scanForNearbyDevices () {
-        messageListener = object : MessageListener() {
-            override fun onFound(message: Message) {
-                val foundID = String(message.content)
-                Log.d(TAG, "Found ID: $foundID")
-
-                val broadcast: Intent = Intent(ContactService.NODE_FOUND)
-                    .putExtra("FOUND_ID", foundID)
-
-                LocalBroadcastManager.getInstance(baseContext).sendBroadcast(broadcast)
-                Toast.makeText(applicationContext, "Found device:  + ${foundID}", Toast.LENGTH_LONG).show()
-            }
-
-            override fun onLost(message: Message) {
-                val lostID = String(message.content)
-                Log.d(TAG, "Lost sight of ID: $lostID")
-
-                val broadcast: Intent = Intent(ContactService.NODE_LOST)
-                    .putExtra("LOST_ID", lostID)
-
-                LocalBroadcastManager.getInstance(applicationContext).sendBroadcast(broadcast)
-                Toast.makeText(applicationContext, "Lost device:  + ${lostID}", Toast.LENGTH_LONG).show()
-            }
-
-            override fun onDistanceChanged(message: Message?, distance: Distance?) {
-                super.onDistanceChanged(message, distance)
-
-                val content : ByteArray? = message?.content
-
-                if (content == null)
-                    return
-
-                val ID = String(content)
-
-                val broadcast: Intent = Intent(ContactService.DISTANCE_UPDATED)
-                    .putExtra("ID", ID)
-                    .putExtra("Distance", distance?.meters)
-
-                LocalBroadcastManager.getInstance(applicationContext).sendBroadcast(broadcast)
-
+    private fun scanForNearbyDevices () {
+        //Scan in the background for the device address that was fetched from the cloud
+        backgroundScanner = BleScanner(applicationContext, object : ScanActive {
+            override fun isBleScannerActive(isActive: Boolean) {
 
             }
-        }
+        })
 
-        Nearby.getMessagesClient(this).subscribe(messageListener!!)
+        deviceInRangeTask = Timer()
+        deviceInRangeTask?.schedule(object : TimerTask() {
+            override fun run() {
+                checkDevicesInRangeTask()
+            }
+        }, 1, 1000)
+
+        backgroundScanner?.scanLeDevice(object : OnAdvertisementFound {
+            override fun onAdvertisementFound(result: ScanResult) {
+                val device = result.device
+                val data = result.scanRecord?.getManufacturerSpecificData(NODE_IDENTIFIER)
+
+                val newDeviceFound = hasNewDeviceBeenFound(result)
+                foundDevices.set(result.device.address, result)
+
+                if (newDeviceFound) {
+                    val nodeID = result.scanRecord?.getManufacturerSpecificData(NODE_IDENTIFIER)?.let {
+                        byteArrayToHexString(it)
+                    }
+                    val broadcast: Intent = Intent(ContactService.NODE_FOUND)
+                        .putExtra("FOUND_ID", nodeID)
+
+                    LocalBroadcastManager.getInstance(baseContext).sendBroadcast(broadcast)
+
+                    Toast.makeText(
+                        applicationContext,
+                        "Found device:  ${nodeID}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        })
     }
 
-    fun updateCommunicationType (newCommunicationType: CommunicationType) {
+    private fun hasNewDeviceBeenFound(result: ScanResult) : Boolean  {
+
+        val iterator = foundDevices.iterator()
+        while(iterator.hasNext()){
+            val item = iterator.next()
+            if(item.key == result.device.address){
+                return false
+            }
+        }
+        return true
+    }
+
+    private fun checkDevicesInRangeTask() {
+        for (device in foundDevices) {
+            val currentTime = SystemClock.elapsedRealtime() / 1000
+            val storedTime = device.value.timestampNanos / 1000000000
+            val millisecondDifference =  (currentTime - storedTime).toLong()
+
+            if (millisecondDifference > CONTACT_OUT_OF_RANGE_TIMEOUT) {
+                val nodeID = device.value.scanRecord?.getManufacturerSpecificData( NODE_IDENTIFIER)?.let {
+                    byteArrayToHexString( it )
+                }
+                this.launch(Dispatchers.Main) {
+                    Toast.makeText(applicationContext, "Lost device:  ${nodeID}", Toast.LENGTH_LONG).show()
+                }
+
+                val broadcast: Intent = Intent(ContactService.NODE_LOST)
+                    .putExtra("LOST_ID", nodeID)
+
+                LocalBroadcastManager.getInstance(applicationContext).sendBroadcast(broadcast)
+
+                removeDeviceFromFoundList(device.key)
+            }
+        }
+    }
+
+    private fun removeDeviceFromFoundList(deviceAddress: String) {
+        foundDevices.remove(deviceAddress)
+    }
+    /**
+     * Updates the communication by first stopping all previous settings and then
+     * calling calling advertising/scanning methods based on the chosen communication type
+     */
+    fun updateCommunicationType(newCommunicationType: CommunicationType) {
         if (newCommunicationType == communicationType)
             return
 
@@ -257,12 +333,27 @@ public class ContactService() : Service() {
         }
     }
 
+    /**
+     * Stops both advertising IDs and scanning for IDs in the area by unsubscribing/unpublishing
+     */
     fun stopAdvertisingAndScanning() {
-        if (uniqueMessage != null)
-            Nearby.getMessagesClient(this)?.unpublish(uniqueMessage!!)
+        deviceInRangeTask?.cancel()
+        backgroundScanner?.stopScan()
+        bleAdvertiser?.stopAdvertising()
+    }
 
-        if (messageListener != null)
-            Nearby.getMessagesClient(this)?.unsubscribe(messageListener!!)
+    /**
+     * Converts byte array to hex string
+     *
+     * @param bytes The data
+     * @return String represents the data in HEX string
+     */
+    fun byteArrayToHexString(bytes: ByteArray): String? {
+        val sb = StringBuilder()
+        for (b in bytes) {
+            sb.append(String.format("%02x", b))
+        }
+        return sb.toString()
     }
 
 

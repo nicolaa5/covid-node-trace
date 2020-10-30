@@ -15,6 +15,8 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.navigation.findNavController
+import com.covid.nodetrace.permissions.PermissionHelper
+import com.covid.nodetrace.permissions.PermissionRationale
 import com.covid.nodetrace.util.NetworkHelper
 import com.covid.nodetrace.permissions.Permissions
 import com.covid.nodetrace.permissions.Permissions.requiredPermissions
@@ -24,8 +26,13 @@ import kotlinx.coroutines.*
 import kotlin.coroutines.CoroutineContext
 
 /**
- * The app's main activity keeps track of the different screens in the forms of multiple [Fragments]
- * It also initiates the background service that is actively scanning for / advertising to nearby devices.
+ * The app's main activity is the entry point of the app and
+ * keeps track of the different screens in the forms of multiple [Fragments]
+ *
+ * @see AppViewModel for contact data that is displayed in the UI and the communication type (Node or User) that is chosen
+ * @see ContactService which starts a the background service that is actively scanning for / advertising to nearby devices.
+ * @see ContactManager which handles all the data that is found when a contact between two devices with the app is found
+ *
  */
 class MainActivity : AppCompatActivity(), CoroutineScope {
     private val TAG: String = MainActivity::class.java.getSimpleName()
@@ -50,6 +57,10 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
     //================================================================================
     // Service logic
     //================================================================================
+
+    /**
+     * Called when a connection between the Activity and Service is created or disconnected
+     */
     private val mServiceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
             mService = service as ContactService.LocalBinder
@@ -90,6 +101,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
             bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE)
         }
 
+        //Listen for changes in the communication type set by the user in the app
         model.communicationType.observe(this, Observer<ContactService.CommunicationType> { communicationType ->
             mService?.setCommunicationType(communicationType)
         })
@@ -101,13 +113,17 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         }
     }
 
+    /**
+     * When the app starts/resumes we check if we have received all the needed permissions
+     *
+     * @see requiredPermissions for the permissions that the app needs
+     */
     override fun onStart() {
         super.onStart()
 
         if (!Permissions.hasPermissions(this, requiredPermissions)) {
-            Permissions.requestPermission(this, requiredPermissions) {
-
-            }
+            val permissionRationale : PermissionRationale = PermissionRationale()
+            permissionRationale.showRationale(this, PermissionHelper.Companion.PERMISSION_REQUEST_CODE)
         }
 
         //Load screen that was open the previous time the app was closed
@@ -118,12 +134,18 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         contactManager.checkForRiskContacts()
     }
 
+    /**
+     * Inflate the menu; this adds items to the action bar if it is present.
+     * Allows the user to navigate between screens
+     */
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.menu_main, menu)
         return true
     }
 
+    /**
+     * Navigate to different fragments based on the chosen item in the menu
+     */
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
@@ -174,6 +196,9 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         mService = null
     }
 
+    /**
+     * Authenticates an anonymous user of the app. The user doesn't need to sign up or sign in
+     */
     private fun authenticateUser(firebaseAuth: FirebaseAuth) {
         firebaseAuth.signInAnonymously().addOnCompleteListener(this) { task ->
             if (task.isSuccessful) {
@@ -185,6 +210,10 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         }
     }
 
+    /**
+     * Handles the navigation between screens and stores the last chosen screen in
+     * local storage so that the next time the app is used it will start on that screen
+     */
     fun showScreen(screen: Screens) {
 
         with(getPreferences(Context.MODE_PRIVATE).edit()) {
