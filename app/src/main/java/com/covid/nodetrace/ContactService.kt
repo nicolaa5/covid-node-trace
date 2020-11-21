@@ -35,7 +35,7 @@ public class ContactService() : Service(), CoroutineScope {
 
         val NODE_FOUND = "com.covid.nodetrace.ContactService.NODE_FOUND"
         val NODE_LOST = "com.covid.nodetrace.ContactService.NODE_LOST"
-        val DISTANCE_UPDATED = "com.covid.nodetrace.ContactService.DISTANCE_UPDATED"
+        val UPDATE_RSSI = "com.covid.nodetrace.ContactService.DISTANCE_UPDATED"
     }
 
     var mService : ContactService.LocalBinder? = null
@@ -248,10 +248,9 @@ public class ContactService() : Service(), CoroutineScope {
                 foundDevices.set(result.device.address, result)
 
                 if (newDeviceFound) {
-                    val nodeID =
-                        result.scanRecord?.getManufacturerSpecificData(NODE_IDENTIFIER)?.let {
-                            byteArrayToHexString(it)
-                        }
+                    val nodeID = result.scanRecord?.getManufacturerSpecificData(NODE_IDENTIFIER)?.let {
+                        byteArrayToHexString(it)
+                    }
                     val broadcast: Intent = Intent(ContactService.NODE_FOUND)
                         .putExtra("FOUND_ID", nodeID)
 
@@ -262,6 +261,17 @@ public class ContactService() : Service(), CoroutineScope {
                         "Found device:  ${nodeID}",
                         Toast.LENGTH_LONG
                     ).show()
+                }
+                else {
+                    val nodeID = result.scanRecord?.getManufacturerSpecificData(NODE_IDENTIFIER)?.let {
+                        byteArrayToHexString(it)
+                    }
+
+                    val broadcast: Intent = Intent(ContactService.UPDATE_RSSI)
+                        .putExtra("ID", nodeID)
+                        .putExtra("RSSI", result.rssi)
+
+                    LocalBroadcastManager.getInstance(baseContext).sendBroadcast(broadcast)
                 }
             }
         })

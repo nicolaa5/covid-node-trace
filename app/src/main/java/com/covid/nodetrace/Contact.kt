@@ -25,6 +25,6 @@ open class Contact (
     @ColumnInfo(name = "latitude") open var latitude : Double = 0.0,
     @ColumnInfo(name = "longitude") open var longitude : Double = 0.0,
     @ColumnInfo(name = "duration") open var duration : Long = -1,
-    @ColumnInfo(name = "distance") open var distance : Double = -1.0,
+    @ColumnInfo(name = "rssi") open var rssi : Int = 0,
     @ColumnInfo(name = "health_status") open var healthStatus : String = HealthStatus.HEALTHY.toString()) {
 }

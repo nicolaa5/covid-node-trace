@@ -11,7 +11,7 @@
         android:layout_marginTop="20dp"
         android:layout_marginRight="20dp"
         android:gravity="center"
-        android:weightSum="4"
+        android:weightSum="5"
         android:orientation="horizontal"
         android:background="@drawable/row">
 
@@ -77,6 +77,24 @@
             android:layout_centerVertical="true"
             android:layout_marginStart="5dp"
             android:text="@string/row_contact_location"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:clickable="false"/>
+
+
+        <TextView
+            android:id="@+id/rssi_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            app:layout_anchor="@+id/row_contact_date"
+            app:layout_anchorGravity="right|center_vertical"
+            android:gravity="center_vertical"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="5dp"
+            android:text="@string/row_contact_rssi"
             android:textSize="12sp"
             android:textStyle="bold"
             android:focusable="false"
