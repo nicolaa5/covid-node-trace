@@ -15,8 +15,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import androidx.room.Room
-import com.covid.nodetrace.ContactService.Companion.DISTANCE_UPDATED
+import com.covid.nodetrace.ContactService.Companion.UPDATE_RSSI
 import com.covid.nodetrace.ContactService.Companion.NODE_FOUND
 import com.covid.nodetrace.ContactService.Companion.NODE_LOST
 import com.covid.nodetrace.database.AppDatabase
@@ -24,8 +23,6 @@ import com.covid.nodetrace.database.DatabaseFactory
 import com.covid.nodetrace.permissions.Permissions
 import com.covid.nodetrace.ui.AppViewModel
 import kotlinx.coroutines.*
-import java.text.SimpleDateFormat
-import java.util.*
 import kotlin.collections.HashSet
 import kotlin.coroutines.CoroutineContext
 
@@ -38,6 +35,7 @@ class ContactManager(context: Context, lifecycle: Lifecycle, viewModel: AppViewM
     private var mContext : Context? = context
     private lateinit var contacts : HashSet<Contact>
     private lateinit var mDataBroadcastReceiver: BroadcastReceiver
+    private var rssiEntries : HashMap<String, MutableList<Int>> = hashMapOf<String, MutableList<Int>>()
 
 
 
@@ -75,22 +73,36 @@ class ContactManager(context: Context, lifecycle: Lifecycle, viewModel: AppViewM
                         val contact = createNewContact(foundID)
                         contacts?.add(contact)
                     }
-                    DISTANCE_UPDATED -> {
+                    UPDATE_RSSI -> {
                         val ID = intent.getStringExtra("ID")
-                        val distance: Double = intent.getDoubleExtra("DISTANCE", -1.0)
+                        val rssi: Int = intent.getIntExtra("RSSI", 0)
 
-                        if (distance == -1.0)
+                        if (rssi == 0)
                             return
 
-                        updateContactDistance(ID, distance)
+                        updateContactSignalStrength(ID, rssi)
                     }
                     NODE_LOST -> {
                         val lostID = intent.getStringExtra("LOST_ID")
+
+                        if (lostID == null)
+                            return
+
                         val contact: Contact? = updateContactDuration(lostID, getCurrentUnixDate())
 
                         //If contact can't be found we do not insert it into the database
                         if (contact == null)
                             return
+
+                        if (rssiEntries[lostID] != null) {
+                            var rssiValue : Int = 0;
+
+                            for (storedRssiValue : Int in rssiEntries[lostID]!!) {
+                                rssiValue += storedRssiValue / (rssiEntries[lostID]?.size!!)
+                            }
+
+                            contact.rssi = rssiValue
+                        }
 
                         insertContact(contact)
                         updateUserInterfaceWithContactHistory()
@@ -124,7 +136,7 @@ class ContactManager(context: Context, lifecycle: Lifecycle, viewModel: AppViewM
                             " ID: ${contact.ID}" +
                             " date: ${contact.date}" +
                             " duration: " + "${contact.duration / 1000f} sec" +
-                            " distance: " + "${contact.distance} meter" +
+                            " rssi: " + "${contact.rssi} dB" +
                             " location: " + " {lat: ${contact.latitude}" + "," + " long: ${contact.longitude}}"
                 )
             }
@@ -190,11 +202,15 @@ class ContactManager(context: Context, lifecycle: Lifecycle, viewModel: AppViewM
     /**
      * Updates the distance the contact was at if it's less than the previous known contact distance
      */
-    fun updateContactDistance(ID: String, distance: Double) {
+    fun updateContactSignalStrength(ID: String, rssi: Int) {
         for (contact in contacts) {
             if (contact.ID == ID) {
-                if (distance < contact.distance)
-                    contact.distance = distance
+                if (rssiEntries[ID] == null) {
+                    rssiEntries[ID] = mutableListOf(rssi)
+                }
+                else {
+                    rssiEntries[ID]?.add(rssi)
+                }
             }
         }
     }
@@ -240,7 +256,7 @@ class ContactManager(context: Context, lifecycle: Lifecycle, viewModel: AppViewM
         val intentFilter = IntentFilter()
         intentFilter.addAction(ContactService.NODE_FOUND)
         intentFilter.addAction(ContactService.NODE_LOST)
-        intentFilter.addAction(ContactService.DISTANCE_UPDATED)
+        intentFilter.addAction(ContactService.UPDATE_RSSI)
         return intentFilter
     }
 
