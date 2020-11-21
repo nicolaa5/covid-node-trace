@@ -170,6 +170,21 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         return true
     }
 
+    /**
+     * Reinitialize the bluetooth communication type after permissions have been granted so
+     * that the contact service works with the correct permissions
+     */
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        val sharedPref = getPreferences(Context.MODE_PRIVATE)
+        communicationType = ContactService.CommunicationType.values()[sharedPref.getInt(getString(R.string.communication_type_state), 0)]
+        mService?.setCommunicationType(communicationType)
+
+    }
     override fun onDestroy() {
         super.onDestroy()
 
