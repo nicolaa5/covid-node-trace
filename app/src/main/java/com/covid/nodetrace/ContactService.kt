@@ -21,7 +21,6 @@ import kotlinx.coroutines.*
 import no.nordicsemi.android.support.v18.scanner.ScanResult
 import java.util.*
 import kotlin.coroutines.CoroutineContext
-import kotlin.experimental.and
 
 
 public class ContactService() : Service(), CoroutineScope {
@@ -36,7 +35,7 @@ public class ContactService() : Service(), CoroutineScope {
 
         val NODE_FOUND = "com.covid.nodetrace.ContactService.NODE_FOUND"
         val NODE_LOST = "com.covid.nodetrace.ContactService.NODE_LOST"
-        val DISTANCE_UPDATED = "com.covid.nodetrace.ContactService.DISTANCE_UPDATED"
+        val UPDATE_RSSI = "com.covid.nodetrace.ContactService.DISTANCE_UPDATED"
     }
 
     var mService : ContactService.LocalBinder? = null
@@ -263,6 +262,17 @@ public class ContactService() : Service(), CoroutineScope {
                         Toast.LENGTH_LONG
                     ).show()
                 }
+                else {
+                    val nodeID = result.scanRecord?.getManufacturerSpecificData(NODE_IDENTIFIER)?.let {
+                        byteArrayToHexString(it)
+                    }
+
+                    val broadcast: Intent = Intent(ContactService.UPDATE_RSSI)
+                        .putExtra("ID", nodeID)
+                        .putExtra("RSSI", result.rssi)
+
+                    LocalBroadcastManager.getInstance(baseContext).sendBroadcast(broadcast)
+                }
             }
         })
     }
@@ -280,14 +290,18 @@ public class ContactService() : Service(), CoroutineScope {
     }
 
     private fun checkDevicesInRangeTask() {
-        for (device in foundDevices) {
+        val iterator: MutableIterator<MutableMap.MutableEntry<String, ScanResult>> = foundDevices.iterator()
+
+        while (iterator.hasNext()) {
+            val device = iterator.next()
+
             val currentTime = SystemClock.elapsedRealtime() / 1000
             val storedTime = device.value.timestampNanos / 1000000000
             val millisecondDifference =  (currentTime - storedTime).toLong()
 
             if (millisecondDifference > CONTACT_OUT_OF_RANGE_TIMEOUT) {
-                val nodeID = device.value.scanRecord?.getManufacturerSpecificData( NODE_IDENTIFIER)?.let {
-                    byteArrayToHexString( it )
+                val nodeID = device.value.scanRecord?.getManufacturerSpecificData(NODE_IDENTIFIER)?.let {
+                    byteArrayToHexString(it)
                 }
                 this.launch(Dispatchers.Main) {
                     Toast.makeText(applicationContext, "Lost device:  ${nodeID}", Toast.LENGTH_LONG).show()

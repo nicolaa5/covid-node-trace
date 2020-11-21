@@ -1,17 +1,17 @@
 package com.covid.nodetrace.ui
 
 import android.content.Context
-import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
+import android.widget.ListView
 import android.widget.TextView
 import com.covid.nodetrace.Contact
 import com.covid.nodetrace.HealthStatus
 import com.covid.nodetrace.R
 import com.covid.nodetrace.util.DataFormatter
-import java.net.CookieHandler
+import com.covid.nodetrace.util.ListHeight
 
 
 class ContactHistoryAdapter(context: Context) : BaseAdapter() {
@@ -28,9 +28,9 @@ class ContactHistoryAdapter(context: Context) : BaseAdapter() {
     /**
      * Update the UI with contacts supplied in the list
      */
-    fun updateValues(contacts: List<Contact>) {
+    fun updateValues(contacts: List<Contact>, listView : ListView) {
         mContacts = contacts
-        rerenderList()
+        renderList(listView)
     }
 
     /**
@@ -52,7 +52,8 @@ class ContactHistoryAdapter(context: Context) : BaseAdapter() {
         return mContacts.size
     }
 
-    fun rerenderList () {
+    fun renderList (listView : ListView) {
+        ListHeight.setListViewHeightBasedOnChildren(listView)
         notifyDataSetChanged()
     }
 
@@ -80,6 +81,7 @@ class ContactHistoryAdapter(context: Context) : BaseAdapter() {
         row.contactDate.text = DataFormatter.createShortDateFormat(contact.date)
         row.contactDuration.text = DataFormatter.createDurationFormat(contact.duration)
         row.contactLocation.text = DataFormatter.createLocationFormat(contact.latitude, contact.longitude)
+        row.contactRssi.text = contact.rssi.toString()
 
         return view
     }
@@ -100,11 +102,13 @@ private class ContactRow(row: View?) {
     public val contactDate: TextView
     public val contactDuration: TextView
     public val contactLocation: TextView
+    public val contactRssi: TextView
 
     init {
         contactHealthStatus = row?.findViewById(R.id.row_contact_health_status) as TextView
         contactDate = row?.findViewById(R.id.row_contact_date) as TextView
         contactDuration = row?.findViewById(R.id.row_contact_duration) as TextView
         contactLocation = row?.findViewById(R.id.row_contact_location) as TextView
+        contactRssi = row?.findViewById(R.id.row_contact_rssi) as TextView
     }
 }
