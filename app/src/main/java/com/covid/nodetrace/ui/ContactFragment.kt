@@ -16,12 +16,6 @@ import com.covid.nodetrace.Contact
 import com.covid.nodetrace.HealthStatus
 import com.covid.nodetrace.R
 import com.covid.nodetrace.util.DataFormatter
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.MapView
-import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 
 
@@ -29,7 +23,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
  * The contact screen of the app indicates all the contacts that the user has had with people that
  * were in the same vicinity and time period as them. It contains a list of encounters the user has had in the past
  */
-class ContactFragment : Fragment(), OnMapReadyCallback {
+class ContactFragment : Fragment() {
     private val model: AppViewModel by activityViewModels()
 
     private lateinit var contactHistoryListView : ListView
@@ -37,8 +31,6 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
 
     private lateinit var bottom_sheet : NestedScrollView
     private lateinit var sheetBehavior : BottomSheetBehavior<NestedScrollView>
-    private var mGoogleMap: GoogleMap? = null
-    private lateinit var mMap: MapView
 
     private lateinit var healthStatusTitle : TextView
     private lateinit var dateTitle : TextView
@@ -47,7 +39,6 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
     private lateinit var contactHealthStatus : TextView
     private lateinit var contactDate : TextView
     private lateinit var contactDuration : TextView
-    private lateinit var mapCardView : CardView
     private var mContacts : List<Contact> = emptyList()
 
     override fun onCreateView(
@@ -70,42 +61,9 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
         contactHealthStatus = view.findViewById(R.id.contact_health_status) as TextView
         contactDate = view.findViewById(R.id.contact_date) as TextView
         contactDuration = view.findViewById(R.id.contact_duration) as TextView
-        mapCardView = view.findViewById(R.id.contact_map_card) as CardView
 
         initializeBottomSheet()
-        initializeMap(savedInstanceState)
-
         listenForContactUpdates()
-    }
-
-    override fun onStart() {
-        super.onStart()
-        mMap.onStart()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        mMap.onResume()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        mMap.onPause()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        mMap.onStop()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        mMap.onDestroy()
-    }
-
-    override fun onLowMemory() {
-        super.onLowMemory()
-        mMap.onLowMemory()
     }
 
     /**
@@ -143,16 +101,6 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
     }
 
     /**
-     * Initializes the map that is shown
-     */
-    private fun initializeMap(savedInstanceState: Bundle?) {
-        mMap = view?.findViewById(R.id.contact_map) as MapView
-        mMap?.onCreate(savedInstanceState)
-        mMap?.getMapAsync(this)
-        mapCardView?.setVisibility(View.INVISIBLE)
-    }
-
-    /**
      * Observers @see AppViewModel for new changes regarding the list of registered contacts
      */
     private fun listenForContactUpdates() {
@@ -167,15 +115,10 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
     }
 
     /**
-     * Displays a contact on the UI and moves the camera location of the map
-     * if a valid location is found for that contact
+     * Displays a contact on the UI
      */
     private fun displayContactFromList(contact: Contact) {
         displayContactData(contact)
-
-        if (isLocationValid(contact.latitude, contact.longitude)) {
-            moveCamera(contact.latitude, contact.longitude)
-        }
     }
 
     /**
@@ -187,11 +130,6 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
 
         val latestContact : Contact = getLatestContact(contacts)
         displayContactData(latestContact)
-
-        getLatestContactWithValidLocation(contacts) { latestValidLocationContact ->
-            mapCardView.setVisibility(View.VISIBLE)
-            moveCamera(latestValidLocationContact?.latitude, latestValidLocationContact?.longitude)
-        }
     }
 
     /**
@@ -218,48 +156,6 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
         contactHealthStatus.text = DataFormatter.createHealthStatusFormat(status)
         contactDate.text =DataFormatter.createDateFormat(contact.date)
         contactDuration.text = DataFormatter.createDurationFormat(contact.duration)
-    }
-
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     */
-    override fun onMapReady(googleMap: GoogleMap) {
-        mGoogleMap = googleMap
-        mGoogleMap?.setMinZoomPreference(10f)
-
-
-        if (mContacts.size > 0) {
-            addMarkers(mContacts)
-            val latestContact = getLatestContact(mContacts)
-            moveCamera(latestContact.latitude, latestContact.longitude)
-        }
-    }
-
-    /**
-     * Adds markers on the map for every supplied contact
-     */
-    private fun addMarkers(contacts: List<Contact>) {
-        val validLocationContacts = filterValidLocations(contacts)
-        for (contact in validLocationContacts) {
-            val location = LatLng(contact.latitude, contact.longitude)
-            mGoogleMap?.addMarker(
-                MarkerOptions()
-                    .position(location)
-                    .title(DataFormatter.createDateFormat(contact.date))
-            )
-        }
-    }
-
-    /**
-     * Moves the camera of the map if the location is valid
-     */
-    private fun moveCamera(latitude: Double, longitude: Double) {
-        if (!isLocationValid(latitude, longitude))
-            return
-
-        val location = LatLng(latitude, longitude)
-        mGoogleMap?.moveCamera(CameraUpdateFactory.newLatLng(location))
     }
 
     /**
