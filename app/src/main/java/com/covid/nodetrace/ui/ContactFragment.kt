@@ -115,6 +115,7 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
         contactHistoryAdapter = ContactHistoryAdapter(requireActivity())
         contactHistoryListView.adapter = contactHistoryAdapter
         requireActivity().registerForContextMenu(contactHistoryListView)
+        contactHistoryAdapter.renderList(contactHistoryListView)
 
         bottom_sheet = requireActivity().findViewById(R.id.bottom_sheet)
         sheetBehavior = BottomSheetBehavior.from(bottom_sheet);
@@ -159,7 +160,7 @@ class ContactFragment : Fragment(), OnMapReadyCallback {
             requireActivity(),
             androidx.lifecycle.Observer<List<Contact>> { contacts ->
                 mContacts = contacts
-                contactHistoryAdapter.updateValues(contacts)
+                contactHistoryAdapter.updateValues(contacts, contactHistoryListView)
                 displayLatestContactFromDatabase(contacts)
             }
         )

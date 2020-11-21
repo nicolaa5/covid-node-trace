@@ -1,17 +1,17 @@
 package com.covid.nodetrace.ui
 
 import android.content.Context
-import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
+import android.widget.ListView
 import android.widget.TextView
 import com.covid.nodetrace.Contact
 import com.covid.nodetrace.HealthStatus
 import com.covid.nodetrace.R
 import com.covid.nodetrace.util.DataFormatter
-import java.net.CookieHandler
+import com.covid.nodetrace.util.ListHeight
 
 
 class ContactHistoryAdapter(context: Context) : BaseAdapter() {
@@ -28,9 +28,9 @@ class ContactHistoryAdapter(context: Context) : BaseAdapter() {
     /**
      * Update the UI with contacts supplied in the list
      */
-    fun updateValues(contacts: List<Contact>) {
+    fun updateValues(contacts: List<Contact>, listView : ListView) {
         mContacts = contacts
-        rerenderList()
+        renderList(listView)
     }
 
     /**
@@ -52,7 +52,8 @@ class ContactHistoryAdapter(context: Context) : BaseAdapter() {
         return mContacts.size
     }
 
-    fun rerenderList () {
+    fun renderList (listView : ListView) {
+        ListHeight.setListViewHeightBasedOnChildren(listView)
         notifyDataSetChanged()
     }
 
